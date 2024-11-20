@@ -15,7 +15,7 @@ User = get_user_model()
 @permission_classes([IsAuthenticated])
 def user_detail(request, username):
     user = get_object_or_404(User, username=username)
-    serializer = ProfileSerializer(user, request=request)
+    serializer = ProfileSerializer(user, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 회원탈퇴

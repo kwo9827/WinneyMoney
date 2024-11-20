@@ -20,43 +20,48 @@ def save_deposit_products(request):
     resp = requests.get(url).json()
     baselist = resp.get("result").get("baseList")
     optionlist = resp.get("result").get("optionList")
+
+    # DepositProducts 저장
     for base in baselist:
         save_data = {
-            'dcls_month': base.get('dcls_month'), # '202001
+            'dcls_month': base.get('dcls_month'),
             'fin_prdt_cd': base.get('fin_prdt_cd'),
             'kor_co_nm': base.get('kor_co_nm'),
             'fin_prdt_nm': base.get('fin_prdt_nm'),
             'etc_note': base.get('etc_note'),
-            'join_deny': int(base.get('join_deny')),
+            'join_deny': int(base.get('join_deny', 1)),
             'join_member': base.get('join_member'),
             'join_way': base.get('join_way'),
             'spcl_cnd': base.get('spcl_cnd'),
         }
-        for elem in save_data:
-            if not save_data[elem]:
-                save_data[elem] = -1
-
         serializer = DepositProductsSerializer(data=save_data)
-
         if serializer.is_valid():
             serializer.save()
+        else:
+            print("DepositProducts 저장 오류:", serializer.errors)
 
+    # DepositOptions 저장
     for option in optionlist:
+        product = DepositProducts.objects.filter(fin_prdt_cd=option.get('fin_prdt_cd')).first()
+        if not product:
+            print(f"상품이 존재하지 않음: {option.get('fin_prdt_cd')}")
+            continue
+
         save_data = {
-            'dcls_month': option.get('dcls_month'), # '202001
-            'fin_prdt_cd': option.get('fin_prdt_cd'),
+            'dcls_month': option.get('dcls_month', product.dcls_month),
+            'fin_prdt_cd': product.fin_prdt_cd,
             'intr_rate_type_nm': option.get('intr_rate_type_nm'),
             'intr_rate': option.get('intr_rate'),
             'intr_rate2': option.get('intr_rate2'),
-            'save_trm': int(option.get('save_trm')),   
+            'save_trm': int(option.get('save_trm', 0)),
         }
-        for elem in save_data:
-            if not save_data[elem]:
-                save_data[elem] = -1
+        print("저장하려는 옵션 데이터:", save_data)
         serializer = DepositOptionsSerializer(data=save_data)
         if serializer.is_valid():
-            serializer.save(product=DepositProducts.objects.get(fin_prdt_cd=save_data.get('fin_prdt_cd')))
-    return Response({"message": "확인 "})
+            serializer.save(product=product)
+        else:
+            print("DepositOptions 저장 오류:", serializer.errors)
+    return Response({"message": "확인"})
 
 
 # deposit_products GET: 전체 정기예금 상품 목록 반환
@@ -79,7 +84,10 @@ def deposit_products(request):
 # deposit_product_options 특정 상품의 옵션 리스트 반환 GET
 @api_view(['GET'])
 def deposit_product_options(request, fin_prdt_cd):
-    depositoptions = DepositOptions.objects.filter(fin_prdt_cd=fin_prdt_cd)
+    print(f"요청 받은 상품 코드: {fin_prdt_cd}")  # 디버깅용 출력
+    # fin_prdt_cd로 데이터 조회
+    depositoptions = DepositOptions.objects.filter(product__fin_prdt_cd=fin_prdt_cd)
+    print(f"조회된 옵션 개수: {depositoptions.count()}")  # 디버깅용 출력
     serializer = DepositOptionsSerializer(depositoptions, many=True)
     return Response(serializer.data)
 
@@ -96,10 +104,10 @@ def favorite(request, fin_prdt_cd):
     return Response({"message": "상품이 즐겨찾기에 추가되었습니다."}, status=status.HTTP_201_CREATED)
 
 
-# 사용자 즐겨찾기 목록 반환
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_favorites(request):
-    favorites = DepositProducts.objects.filter(favorited_by__user=request.user).order_by('id')
+    # 현재 유저가 즐겨찾기한 상품 조회
+    favorites = DepositProducts.objects.filter(user_favorites__user=request.user)
     serializer = DepositProductsSerializer(favorites, many=True, context={'request': request})
     return Response(serializer.data)
