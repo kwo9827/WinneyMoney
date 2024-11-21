@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from django.shortcuts import get_object_or_404, get_list_or_404
 from .serializers import ArticleSerializer,CommentSerializer
@@ -14,7 +14,7 @@ from .models import Article,Comment
 @permission_classes([IsAuthenticated])
 def article_list(request):
     if request.method == 'GET':
-        articles = get_list_or_404(Article)
+        articles = Article.objects.all()
         serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data)
 
@@ -24,19 +24,19 @@ def article_list(request):
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-
 # 게시글 상세 조회
 @api_view(['GET', 'DELETE', 'PUT'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])  # GET 요청에 대해 비로그인 사용자 허용
 def article_detail(request, article_pk):
     article = get_object_or_404(Article, pk=article_pk)
     comments = Comment.objects.filter(article=article).order_by('created_at')
     if request.method == 'GET':
         article_serializer = ArticleSerializer(article)
         comment_serializer = CommentSerializer(comments, many=True)
-        print('게시글', article_serializer.data)
-        print('댓글', comment_serializer.data, article_pk)
-        return Response({'article':article_serializer.data, 'comments':comment_serializer.data})
+        return Response({'article': article_serializer.data, 'comments': comment_serializer.data})
+    
+    if not request.user.is_authenticated:
+        return Response({'message': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
     
     if request.user != article.user:
         return Response({'message': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
@@ -52,22 +52,20 @@ def article_detail(request, article_pk):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 # 댓글 생성
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def comments_create(request, article_pk, parent_pk):
-    article=get_object_or_404(Article,pk=article_pk)
+    article=get_object_or_404(Article, pk=article_pk)
     serializer = CommentSerializer(data=request.data)
     if serializer.is_valid(raise_exception=True):
         if parent_pk:
-            parent_Comment=get_object_or_404(pk=parent_pk)
+            parent_Comment = get_object_or_404(Comment, pk=parent_pk)
             serializer.save(user=request.user, article=article, parent_comment=parent_Comment)
         else:
-            serializer.save(user=request.user,article=article)
+            serializer.save(user=request.user, article=article)
         return Response({'message':'success'})
-    return Response({'message': 'fail'})
-
+    return Response({'message': 'fail'}, status=status.HTTP_400_BAD_REQUEST)
 
 # 댓글 삭제
 @api_view(['DELETE'])
@@ -78,7 +76,6 @@ def comments_delete(request, article_pk, comment_pk):
         return Response({'message': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
     comment.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 # 댓글 수정
 @api_view(['PUT'])
