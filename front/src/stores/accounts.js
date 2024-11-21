@@ -114,25 +114,32 @@ export const useAccountStore = defineStore('accounts', () => {
 
   // 회원정보 변경
   const updateProfile = function (payload) {
+    const updatedPayload = {
+      email: payload.email,
+      first_name: payload.first_name,
+      last_name: payload.last_name,
+    }; 
+  
     return axios({
       method: 'put',
-      url: `${API_URL}/accounts/auth/user/`,
+      url: `${API_URL}/accounts/edit/`,
       headers: { Authorization: `Token ${token.value}` },
-      data: payload,
+      data: updatedPayload,
     })
       .then((res) => {
-        const data = res.data
-        email.value = data.email
-        firstName.value = data.first_name
-        lastName.value = data.last_name
-        profileImage.value = data.profile_image
-        router.push({ name: 'ProfileView' })
+        const data = res.data;
+        email.value = data.email;
+        firstName.value = data.first_name;
+        lastName.value = data.last_name;
+        profileImage.value = data.profile_image;
+        router.push({ name: 'ProfileView' });
       })
       .catch((err) => {
-        console.error('프로필 업데이트 실패:', err.response?.data)
-        alert('프로필 업데이트에 실패했습니다. 다시 시도해주세요.')
-      })
-  }
+        console.error('프로필 업데이트 실패:', err.response?.data);
+        alert('프로필 업데이트에 실패했습니다. 다시 시도해주세요.');
+      });
+  };
+  
 
   // 비밀번호 찾기 (이메일로 재설정 링크 전송)
   const resetPassword = function (email) {
