@@ -22,7 +22,7 @@
                 <strong>이메일:</strong> {{ store.email }}
               </li>
               <li class="list-group-item">
-                <strong>이름:</strong> {{ store.lastName }} {{ store.firstName }}
+                <strong>이름:</strong> {{ store.lastName }}{{ store.firstName }}
               </li>
             </ul>
           </div>
