@@ -1,4 +1,33 @@
+<<<<<<< HEAD
 import { createRouter, createWebHistory } from 'vue-router'
+=======
+import { createRouter, createWebHistory } from 'vue-router';
+
+// accounts
+import ChangePasswordView from '@/views/accounts/ChangePasswordView.vue';
+import FindPasswordView from '@/views/accounts/FindPasswordView.vue';
+import LoginView from '@/views/accounts/LoginView.vue';
+import ProfileView from '@/views/accounts/ProfileView.vue';
+import SignUpView from '@/views/accounts/SignUpView.vue';
+import UpdateView from '@/views/accounts/UpdateView.vue';
+
+// articles
+import ArticleView from '@/views/articles/ArticleView.vue';
+import CreateView from '@/views/articles/CreateView.vue';
+import DetailView from '@/views/articles/DetailView.vue';
+
+// finance
+import CartView from '@/views/finance/CartView.vue';
+import InterestDetailView from '@/views/finance/InterestDetailView.vue';
+import InterestView from '@/views/finance/InterestView.vue';
+
+// etc
+import ExchangeView from '@/views/etc/ExchangeView.vue';
+import MapView from '@/views/etc/MapView.vue';
+
+// home
+import HomeView from '@/views/HomeView.vue';
+>>>>>>> af5bc1a4ce12940f0ff16a50ebc926f0f2243462
 
 // Views
 import HomeView from '@/views/HomeView.vue'
