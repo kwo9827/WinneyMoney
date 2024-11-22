@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import ArticleList from '@/components/ArticleList.vue'
+import ArticleList from '@/components/Article/ArticleList.vue'
 import { onMounted } from 'vue'
 import { useCommunityStore } from '@/stores/community'
 

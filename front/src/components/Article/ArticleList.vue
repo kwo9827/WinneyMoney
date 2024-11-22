@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import ArticleListItem from '@/components/ArticleListItem.vue'
+import ArticleListItem from '@/components/Article/ArticleListItem.vue'
 import { useCommunityStore } from '@/stores/community'
 
 const store = useCommunityStore()
