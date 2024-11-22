@@ -1,19 +1,19 @@
 <template>
   <div>
     <div class="container">
-      <!-- 데이터가 없을 때 로딩 메시지 -->
-      <div v-if="!financeStore.deposits.length">
+      <!-- 데이터 로딩 메시지 -->
+      <div v-if="loading">
         <p>데이터를 로드 중입니다...</p>
       </div>
-      <!-- 데이터가 있을 때 -->
+      <!-- 데이터가 로드된 후 -->
       <div v-else>
         <!-- 테이블 헤더 -->
         <div class="table-header">
           <span class="header-item">은행명</span>
           <span class="header-item">상품명</span>
-          <span 
-            v-for="period in periods" 
-            :key="'header-' + period" 
+          <span
+            v-for="period in periods"
+            :key="'header-' + period"
             class="header-item"
             @dblclick="sortByPeriod(period)"
           >
@@ -24,11 +24,11 @@
         <!-- 필터 입력 -->
         <div class="filters">
           <label for="bank">은행명</label>
-          <input 
-            type="text" 
-            id="bank" 
-            v-model="bank" 
-            placeholder="은행명을 입력하세요" 
+          <input
+            type="text"
+            id="bank"
+            v-model="bank"
+            placeholder="은행명을 입력하세요"
           />
           <label for="period">기간</label>
           <select id="period" v-model="selectedPeriod">
@@ -39,56 +39,71 @@
           </select>
           <label for="count">검색된 상품 수 : </label>
           <button id="count">{{ filteredDeposits.length }}</button>
+          <button @click="resetOrder">정렬 초기화</button>
           <hr />
         </div>
         <!-- DepositListItem 컴포넌트 -->
         <div v-for="deposit in filteredDeposits" :key="deposit.id">
-          <DepositListItem :deposit="deposit" :highlight-period="selectedPeriod" />
+          <DepositListItem
+            :deposit="deposit"
+            :highlight-period="selectedPeriod"
+          />
         </div>
       </div>
     </div>
   </div>
 </template>
 
-
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useFinanceStore } from '@/stores/finance'
-import DepositListItem from './DepositListItem.vue'
+import { ref, computed, onMounted } from 'vue';
+import { useFinanceStore } from '@/stores/finance';
+import DepositListItem from './DepositListItem.vue';
 
-// 스토어 사용
-const financeStore = useFinanceStore()
-
-// 필터 상태
-const deposits = computed(() => {
-  return financeStore.deposits
-})
-const bank = ref('')
-const selectedPeriod = ref(0)
-const periods = [6, 12, 24, 36]
+// 로컬 상태 및 스토어
+const loading = ref(true); // 로딩 상태
+const deposits = ref([]);
+const initialDeposits = ref([]);
+const financeStore = useFinanceStore();
+const bank = ref(''); // 은행명 필터
+const selectedPeriod = ref(0); // 기간 필터
+const periods = [6, 12, 24, 36]; // 기간 옵션
 
 // 데이터 로드
 onMounted(async () => {
-  await financeStore.fetchDeposits() // 스토어에서 데이터 로드
-  deposits.value = [...financeStore.deposits] || []// 로컬로 데이터 복사
-})
+  loading.value = true; // 로딩 시작
+  await financeStore.fetchDeposits(); // 스토어에서 데이터 로드
+  deposits.value = [...financeStore.deposits] || []; // 로컬로 데이터 복사
+  initialDeposits.value = [...financeStore.deposits] || [];
+  loading.value = false; // 로딩 종료
+});
+
+// 정렬 초기화
+const resetOrder = () => {
+  deposits.value = [...initialDeposits.value]; // 초기 데이터로 복원
+};
 
 // 필터링된 예금 리스트
 const filteredDeposits = computed(() => {
-  return deposits.value.filter(deposit => {
+  return deposits.value.filter((deposit) => {
     // 은행명 필터
-    const bankFilter = deposit.kor_co_nm.toLowerCase().includes(bank.value.toLowerCase())
+    const bankFilter = deposit.kor_co_nm
+      .toLowerCase()
+      .includes(bank.value.toLowerCase());
     // 기간 필터
-    const periodFilter = !selectedPeriod.value || deposit.options.some(option => option.save_trm === Number(selectedPeriod.value))
-    return bankFilter && periodFilter
-  })
-})
+    const periodFilter =
+      !selectedPeriod.value ||
+      deposit.options.some(
+        (option) => option.save_trm === Number(selectedPeriod.value)
+      );
+    return bankFilter && periodFilter;
+  });
+});
 
 // 기간별 정렬
 const sortByPeriod = (period) => {
   deposits.value.sort((a, b) => {
-    const aOption = a.options.find(option => option.save_trm === period);
-    const bOption = b.options.find(option => option.save_trm === period);
+    const aOption = a.options.find((option) => option.save_trm === period);
+    const bOption = b.options.find((option) => option.save_trm === period);
     const aRate = aOption ? aOption.intr_rate : 0; // 해당 기간 금리가 없으면 0
     const bRate = bOption ? bOption.intr_rate : 0; // 해당 기간 금리가 없으면 0
     return bRate - aRate; // 내림차순 정렬

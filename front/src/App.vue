@@ -8,6 +8,7 @@
       </div>
       <div class="nav-left">
         <RouterLink :to="{ name: 'FinanceView' }" class="nav-item">예/적금 상품목록</RouterLink>
+        <RouterLink :to="{ name: 'PortfolioCreateView' }" class="nav-item">포트폴리오 생성</RouterLink>
         <RouterLink :to="{ name: 'ArticleView' }" class="nav-item">유저 게시판</RouterLink>
         <RouterLink :to="{ name: 'NewsHomeView' }" class="nav-item">뉴스</RouterLink>
         <RouterLink :to="{ name: 'ExchangeView' }" class="nav-item">환전 하기</RouterLink>

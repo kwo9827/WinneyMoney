@@ -1,11 +1,12 @@
 from django.db import models
 from django.conf import settings
 from finlife.models import DepositProducts, SavingProducts
+from datetime import date
 
 User = settings.AUTH_USER_MODEL
 
 class Portfolio(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="portfolios")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="portfolios")
     name = models.CharField(max_length=100)
     total_investment = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     predicted_economy = models.CharField(
@@ -71,7 +72,6 @@ class Stock(models.Model):
     def __str__(self):
         return f"{self.ticker} in {self.portfolio.name}"
 
-from datetime import date
 
 class Bond(models.Model):
     portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name="bonds")
@@ -87,3 +87,28 @@ class Bond(models.Model):
 
     def __str__(self):
         return f"{self.name} in {self.portfolio.name}"
+
+
+class UserResponse(models.Model):
+    portfolio = models.OneToOneField(Portfolio, on_delete=models.CASCADE, related_name="user_response")
+    current_step = models.PositiveIntegerField(default=0)  # 사용자가 어디까지 응답했는지 저장
+    responses = models.JSONField(default=dict)  # 각 단계별 응답 데이터를 저장
+
+    def __str__(self):
+        return f"Responses for {self.portfolio.name}"
+
+
+class RecommendationLog(models.Model):
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name="recommendation_logs")
+    product = models.ForeignKey(
+        DepositProducts,
+        on_delete=models.CASCADE,
+        related_name="recommendation_logs",
+        blank=True,
+        null=True
+    )
+    reason = models.TextField(blank=True, null=True)  # 추천 이유
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Recommendation for {self.portfolio.name}"

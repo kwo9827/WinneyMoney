@@ -34,6 +34,7 @@ import SavingDetailView from '@/views/finance/saving/SavingDetailView.vue'
 
 // portfolio 기능
 import PortfolioDetailView from '@/views/portfolios/PortfolioDetailView.vue'
+import PortfolioCreateView from '@/views/portfolios/PortfolioCreateView.vue'
 
 import { useAccountStore } from '@/stores/accounts'
 
@@ -178,6 +179,12 @@ const router = createRouter({
       path: '/:catchAll(.*)',
       name: 'NotFoundView',
       component: NotFoundView,
+    },
+    // 포트폴리오 생성
+    {
+      path: '/portfolio/create',
+      name: 'PortfolioCreateView',
+      component: PortfolioCreateView
     },
   ],
 })

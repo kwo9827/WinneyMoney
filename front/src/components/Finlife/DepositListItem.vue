@@ -1,7 +1,8 @@
 <template>
   <div class="data-row">
+    <!-- 클릭하여 상세 페이지로 이동 -->
     <div @click="goToDetail" class="deposit-item">
-      <p>{{ deposit.id}}</p>
+      <p>{{ deposit.id }}</p>
     </div>
     <!-- 은행명 -->
     <span class="data-item">{{ deposit.kor_co_nm }}</span>
@@ -9,20 +10,21 @@
     <span class="data-item">{{ deposit.fin_prdt_nm }}</span>
     <!-- 금리 -->
     <span
-      v-for="period in [6, 12, 24, 36]"
+      v-for="(rate, period) in rates"
       :key="'rate-' + period"
       class="data-item"
       :class="{ highlight: period === highlightPeriod }"
     >
-      <span v-if="deposit.options.find(option => option.save_trm === period)?.intr_rate">
-        {{ deposit.options.find(option => option.save_trm === period).intr_rate }}%
-      </span>
+      <span v-if="rate">{{ rate }}%</span>
       <span v-else>-</span>
     </span>
   </div>
 </template>
 
 <script setup>
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+
 const props = defineProps({
   deposit: Object, // 단일 예금 데이터
   highlightPeriod: {
@@ -31,13 +33,26 @@ const props = defineProps({
   },
 });
 
-import { useRouter } from 'vue-router';
-const router = useRouter()
+const router = useRouter();
+
+// 기간별 금리 계산
+const rates = computed(() => {
+  const periods = [6, 12, 24, 36];
+  return periods.reduce((acc, period) => {
+    const option = props.deposit?.options?.find((opt) => opt.save_trm === period);
+    acc[period] = option?.intr_rate || null; // 금리가 없으면 null
+    return acc;
+  }, {});
+});
+
+// 상세 페이지로 이동
 const goToDetail = () => {
-  router.push(`/finance/deposit/${props.deposit.id}`)
-}
-
-
+  if (props.deposit?.id) {
+    router.push(`/finance/deposit/${props.deposit.id}`);
+  } else {
+    console.warn("Invalid deposit data:", props.deposit);
+  }
+};
 </script>
 
 <style scoped>
@@ -48,6 +63,7 @@ const goToDetail = () => {
   padding: 1rem;
   border-bottom: 1px solid #dee2e6;
   background-color: white;
+  cursor: pointer;
 }
 
 .data-item {
@@ -67,5 +83,11 @@ const goToDetail = () => {
   font-weight: bold;
   border-radius: 0.3rem;
   padding: 0.2rem 0.5rem;
+}
+
+.deposit-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #7f8c8d;
 }
 </style>

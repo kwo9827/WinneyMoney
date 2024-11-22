@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="container mt-5">
     <div class="row justify-content-center">
       <div class="col-md-6">
@@ -66,4 +66,4 @@ onMounted(() => {
 .list-group-item:hover {
   background-color: #f8f9fa;
 }
-</style>
+</style> -->
