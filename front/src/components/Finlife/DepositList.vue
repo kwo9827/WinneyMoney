@@ -36,17 +36,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useFinanceStore } from '@/stores/finance';
-import DepositListItem from './DepositListItem.vue';
+import { ref, computed, onMounted } from 'vue'
+import { useFinanceStore } from '@/stores/finance'
+import DepositListItem from './DepositListItem.vue'
 
-const financeStore = useFinanceStore();
+// 스토어 사용
+const financeStore = useFinanceStore()
 
-const deposits = ref([]);
-const bank = ref('');
-const selectedPeriod = ref('');
-const periods = [6, 12, 24, 36]; // 개월 수 정의
+// 필터 상태
+const deposits = ref([])
+const bank = ref('')
+const selectedPeriod = ref(0)
+const periods = [6, 12, 24, 36]
 
+// 데이터 로드
 onMounted(async () => {
   await financeStore.fetchDeposits();
   deposits.value = [...financeStore.deposits] || [];

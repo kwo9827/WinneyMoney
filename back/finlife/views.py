@@ -9,6 +9,8 @@ from .serializers import DepositProductsSerializer, DepositOptionsSerializer, Sa
 from django.conf import settings
 import requests
 from django.http import JsonResponse
+from django.db import IntegrityError
+from django.db.models import Q
 
 API_KEY = settings.DEPOSIT_API_KEY
 
@@ -16,199 +18,129 @@ API_KEY = settings.DEPOSIT_API_KEY
 # 상품 목록과 옵션 목록을 DB에 저장 GET
 @api_view(['GET'])
 def save_deposit_products(request):
-    # 예금 url
-    url = f'http://finlife.fss.or.kr/finlifeapi/depositProductsSearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1'
+    # API 요청
+    url = f"http://finlife.fss.or.kr/finlifeapi/depositProductsSearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1"
     response = requests.get(url).json()
-    baseLists = response.get('result').get('baseList')
-    optionLists = response.get('result').get('optionList')
-    # return Response(response)
-    for baseList in baseLists:
-        dcls_month = baseList.get('dcls_month') or -1
-        fin_prdt_cd = baseList.get('fin_prdt_cd')
-        kor_co_nm = baseList.get('kor_co_nm')
-        fin_prdt_nm = baseList.get('fin_prdt_nm')
-        join_way = baseList.get('join_way')
-        mtrt_int = baseList.get('mtrt_int')
-        spcl_cnd = baseList.get('spcl_cnd')
-        join_deny = baseList.get('join_deny')
-        join_member = baseList.get('join_member')
-        etc_note = baseList.get('etc_note')
-        max_limit = baseList.get('max_limit') or -1
-        dcls_strt_day = baseList.get('dcls_strt_day') or -1
-        dcls_end_day = baseList.get('dcls_end_day') or -1
-        fin_co_subm_day = baseList.get('fin_co_subm_day') or -1
+    baseLists = response.get('result', {}).get('baseList', [])
+    optionLists = response.get('result', {}).get('optionList', [])
 
-        if DepositProducts.objects.filter(dcls_month=dcls_month, 
-                                          fin_prdt_cd=fin_prdt_cd, 
-                                          kor_co_nm=kor_co_nm,
-                                          fin_prdt_nm=fin_prdt_nm, 
-                                          join_way=join_way, 
-                                          mtrt_int=mtrt_int,
-                                          spcl_cnd=spcl_cnd,
-                                          join_deny=join_deny, 
-                                          join_member=join_member, 
-                                          etc_note=etc_note, 
-                                          max_limit=max_limit,
-                                          dcls_strt_day=dcls_strt_day,
-                                          dcls_end_day=dcls_end_day,
-                                          fin_co_subm_day=fin_co_subm_day
-                                          ).exists(): continue
+    # 예금 상품 저장
+    for base in baseLists:
+        try:
+            product, created = DepositProducts.objects.get_or_create(
+                fin_prdt_cd=base.get('fin_prdt_cd'),
+                defaults={
+                    'dcls_month': base.get('dcls_month') or -1,
+                    'kor_co_nm': base.get('kor_co_nm'),
+                    'fin_prdt_nm': base.get('fin_prdt_nm'),
+                    'join_way': base.get('join_way'),
+                    'mtrt_int': base.get('mtrt_int'),
+                    'spcl_cnd': base.get('spcl_cnd'),
+                    'join_deny': base.get('join_deny'),
+                    'join_member': base.get('join_member'),
+                    'etc_note': base.get('etc_note'),
+                    'max_limit': base.get('max_limit') or -1,
+                    'dcls_strt_day': base.get('dcls_strt_day') or -1,
+                    'dcls_end_day': base.get('dcls_end_day') or -1,
+                    'fin_co_subm_day': base.get('fin_co_subm_day') or -1,
+                }
+            )
+            if created:
+                print(f"새 예금 상품 저장: {product.fin_prdt_cd}")
+        except IntegrityError as e:
+            print(f"예금 상품 저장 오류: {e}")
 
-        save_data = {
-            'dcls_month': dcls_month, 
-            'fin_prdt_cd': fin_prdt_cd, 
-            'kor_co_nm': kor_co_nm, 
-            'fin_prdt_nm': fin_prdt_nm,
-            'join_way': join_way,
-            'mtrt_int': mtrt_int, 
-            'spcl_cnd': spcl_cnd,
-            'join_deny': join_deny, 
-            'join_member': join_member, 
-            'etc_note': etc_note, 
-            'max_limit': max_limit,
-            'dcls_strt_day': dcls_strt_day,
-            'dcls_end_day': dcls_end_day,
-            'fin_co_subm_day': fin_co_subm_day,
-        }
+    # 예금 옵션 저장
+    for option in optionLists:
+        try:
+            product = DepositProducts.objects.get(fin_prdt_cd=option.get('fin_prdt_cd'))
+            option_data = {
+                'product': product,
+                'fin_prdt_cd': option.get('fin_prdt_cd'),
+                'intr_rate_type_nm': option.get('intr_rate_type_nm'),
+                'intr_rate': option.get('intr_rate') or -1,
+                'intr_rate2': option.get('intr_rate2') or -1,
+                'save_trm': option.get('save_trm'),
+            }
+            _, created = DepositOptions.objects.get_or_create(
+                product=product,
+                fin_prdt_cd=option_data['fin_prdt_cd'],
+                intr_rate_type_nm=option_data['intr_rate_type_nm'],
+                save_trm=option_data['save_trm'],
+                defaults=option_data
+            )
+            if created:
+                print(f"새 예금 옵션 저장: {option_data['fin_prdt_cd']} - {option_data['save_trm']}개월")
+        except DepositProducts.DoesNotExist:
+            print(f"예금 상품 없음: {option.get('fin_prdt_cd')}")
+        except IntegrityError as e:
+            print(f"예금 옵션 저장 오류: {e}")
 
-        # return JsonResponse(save_data)
-        serializer = DepositProductsSerializer(data=save_data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
+    return Response({"message": "Deposit products and options saved successfully."}, status=status.HTTP_200_OK)
 
-    for optionList in optionLists :
-
-        product_cd = optionList.get('fin_prdt_cd')
-        product = DepositProducts.objects.get(fin_prdt_cd=product_cd)
-
-        fin_prdt_cd = optionList.get('fin_prdt_cd')
-        intr_rate_type_nm = optionList.get('intr_rate_type_nm')
-        intr_rate = optionList.get('intr_rate') or -1
-        intr_rate2 = optionList.get('intr_rate2')
-        save_trm = optionList.get('save_trm')
-
-        if DepositOptions.objects.filter(
-            fin_prdt_cd=fin_prdt_cd, 
-            intr_rate_type_nm=intr_rate_type_nm, 
-            intr_rate=intr_rate, 
-            intr_rate2=intr_rate2,
-            save_trm=save_trm,
-            ).exists():
-            continue
-    
-        save_data = {
-        'fin_prdt_cd' : fin_prdt_cd,
-        'intr_rate_type_nm' : intr_rate_type_nm,
-        'intr_rate' : intr_rate,
-        'intr_rate2' : intr_rate2,
-        'save_trm' : save_trm,
-    }
-
-        # return JsonResponse(save_data)
-        serializer = DepositOptionsSerializer(data=save_data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(product=product)
-            
-    return JsonResponse({ 'message' : 'Okay!'})
 
 @api_view(['GET'])
 def save_saving_products(request):
-    api_key = settings.DEPOSIT_API_KEY
-    url = f'http://finlife.fss.or.kr/finlifeapi/savingProductsSearch.json?auth={api_key}&topFinGrpNo=020000&pageNo=1'
+    # API 요청
+    url = f"http://finlife.fss.or.kr/finlifeapi/savingProductsSearch.json?auth={API_KEY}&topFinGrpNo=020000&pageNo=1"
     response = requests.get(url).json()
-    baseLists = response.get('result').get('baseList')
-    optionLists = response.get('result').get('optionList')
-    for baseList in baseLists:
-        dcls_month = baseList.get('dcls_month') or -1
-        fin_prdt_cd = baseList.get('fin_prdt_cd')
-        kor_co_nm = baseList.get('kor_co_nm')
-        fin_prdt_nm = baseList.get('fin_prdt_nm')
-        join_way = baseList.get('join_way')
-        mtrt_int = baseList.get('mtrt_int')
-        spcl_cnd = baseList.get('spcl_cnd')
-        join_deny = baseList.get('join_deny')
-        join_member = baseList.get('join_member')
-        etc_note = baseList.get('etc_note')
-        max_limit = baseList.get('max_limit') or -1
-        dcls_strt_day = baseList.get('dcls_strt_day') or -1
-        dcls_end_day = baseList.get('dcls_end_day') or -1
-        fin_co_subm_day = baseList.get('fin_co_subm_day') or -1
+    baseLists = response.get('result', {}).get('baseList', [])
+    optionLists = response.get('result', {}).get('optionList', [])
 
-        if SavingProducts.objects.filter(dcls_month=dcls_month, 
-                                          fin_prdt_cd=fin_prdt_cd, 
-                                          kor_co_nm=kor_co_nm, 
-                                          fin_prdt_nm=fin_prdt_nm,
-                                          join_way=join_way,
-                                          mtrt_int=mtrt_int, 
-                                          spcl_cnd=spcl_cnd,
-                                          join_deny=join_deny, 
-                                          join_member=join_member, 
-                                          etc_note=etc_note, 
-                                          max_limit=max_limit,
-                                          dcls_strt_day=dcls_strt_day,
-                                          dcls_end_day=dcls_end_day,
-                                          fin_co_subm_day=fin_co_subm_day,
-                                         ).exists(): continue
+    # 적금 상품 저장
+    for base in baseLists:
+        try:
+            product, created = SavingProducts.objects.get_or_create(
+                fin_prdt_cd=base.get('fin_prdt_cd'),
+                defaults={
+                    'dcls_month': base.get('dcls_month') or -1,
+                    'kor_co_nm': base.get('kor_co_nm'),
+                    'fin_prdt_nm': base.get('fin_prdt_nm'),
+                    'join_way': base.get('join_way'),
+                    'mtrt_int': base.get('mtrt_int'),
+                    'spcl_cnd': base.get('spcl_cnd'),
+                    'join_deny': base.get('join_deny'),
+                    'join_member': base.get('join_member'),
+                    'etc_note': base.get('etc_note'),
+                    'max_limit': base.get('max_limit') or -1,
+                    'dcls_strt_day': base.get('dcls_strt_day') or -1,
+                    'dcls_end_day': base.get('dcls_end_day') or -1,
+                    'fin_co_subm_day': base.get('fin_co_subm_day') or -1,
+                }
+            )
+            if created:
+                print(f"새 적금 상품 저장: {product.fin_prdt_cd}")
+        except IntegrityError as e:
+            print(f"적금 상품 저장 오류: {e}")
 
-        save_data = {
-            'dcls_month': dcls_month,  
-            'fin_prdt_cd': fin_prdt_cd, 
-            'kor_co_nm': kor_co_nm, 
-            'fin_prdt_nm': fin_prdt_nm,
-            'join_way': join_way,
-            'mtrt_int': mtrt_int, 
-            'spcl_cnd': spcl_cnd,
-            'join_deny': join_deny, 
-            'join_member': join_member, 
-            'etc_note': etc_note, 
-            'max_limit': max_limit,
-            'dcls_strt_day': dcls_strt_day,
-            'dcls_end_day': dcls_end_day,
-            'fin_co_subm_day': fin_co_subm_day,
-        }
+    # 적금 옵션 저장
+    for option in optionLists:
+        try:
+            product = SavingProducts.objects.get(fin_prdt_cd=option.get('fin_prdt_cd'))
+            option_data = {
+                'product': product,
+                'fin_prdt_cd': option.get('fin_prdt_cd'),
+                'intr_rate_type_nm': option.get('intr_rate_type_nm'),
+                'rsrv_type_nm': option.get('rsrv_type_nm'),
+                'intr_rate': option.get('intr_rate') or -1,
+                'intr_rate2': option.get('intr_rate2') or -1,
+                'save_trm': option.get('save_trm'),
+            }
+            _, created = SavingOptions.objects.get_or_create(
+                product=product,
+                fin_prdt_cd=option_data['fin_prdt_cd'],
+                intr_rate_type_nm=option_data['intr_rate_type_nm'],
+                save_trm=option_data['save_trm'],
+                defaults=option_data
+            )
+            if created:
+                print(f"새 적금 옵션 저장: {option_data['fin_prdt_cd']} - {option_data['save_trm']}개월")
+        except SavingProducts.DoesNotExist:
+            print(f"적금 상품 없음: {option.get('fin_prdt_cd')}")
+        except IntegrityError as e:
+            print(f"적금 옵션 저장 오류: {e}")
 
-        # return JsonResponse(save_data)
-        serializer = SavingProductsSerializer(data=save_data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-
-    for optionList in optionLists :
-
-        product_cd = optionList.get('fin_prdt_cd')
-        product = SavingProducts.objects.get(fin_prdt_cd=product_cd)
-
-        fin_prdt_cd = optionList.get('fin_prdt_cd')
-        intr_rate_type_nm = optionList.get('intr_rate_type_nm')
-        rsrv_type_nm = optionList.get('rsrv_type_nm')
-        intr_rate = optionList.get('intr_rate') or -1
-        intr_rate2 = optionList.get('intr_rate2')
-        save_trm = optionList.get('save_trm')
-
-        if SavingOptions.objects.filter(
-            fin_prdt_cd=fin_prdt_cd, 
-            intr_rate_type_nm=intr_rate_type_nm, 
-            rsrv_type_nm=rsrv_type_nm,
-            intr_rate=intr_rate, 
-            intr_rate2=intr_rate2,
-            save_trm=save_trm,
-            ).exists():
-            continue
-    
-        save_data = {
-        'fin_prdt_cd' : fin_prdt_cd,
-        'intr_rate_type_nm' : intr_rate_type_nm,
-        'rsrv_type_nm' : rsrv_type_nm,
-        'intr_rate' : intr_rate,
-        'intr_rate2' : intr_rate2,
-        'save_trm' : save_trm,
-    }
-
-        # return JsonResponse(save_data)
-        serializer = SavingOptionsSerializer(data=save_data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(product=product)
-            
-    return JsonResponse({ 'message' : 'Okay!'})
+    return Response({"message": "Saving products and options saved successfully."}, status=status.HTTP_200_OK)
 
 # deposit_products GET: 전체 정기예금 상품 목록 반환
 # POST: 상품 데이터 저장 GET, POST

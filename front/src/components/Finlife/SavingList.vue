@@ -1,50 +1,51 @@
 <template>
-  <div class="container">
-    <!-- 필터 입력 -->
-    <div class="filters">
-      <label for="bank">은행명</label>
-      <input
-        type="text"
-        id="bank"
-        v-model="bank"
-        placeholder="은행명을 입력하세요"
-      />
-      <label for="period">기간</label>
-      <select id="period" v-model="selectedPeriod">
-        <option value="">모든 기간</option>
-        <option v-for="period in periods" :key="period" :value="period">
-          {{ period }}개월
-        </option>
-      </select>
-      <label for="count">검색된 상품 수:</label>
-      <button id="count" class="count-button">{{ filteredSavings.length }}</button>
-    </div>
+  <div>
+    <div class="container">
+      <!-- 데이터가 없을 때 로딩 메시지 -->
+      <div v-if="!financeStore.savings.length">
+        <p>데이터를 로드 중입니다...</p>
+      </div>
+      <!-- 데이터가 있을 때 -->
+      <div v-else>
+        <!-- 테이블 헤더 -->
+        <div class="table-header">
+          <span class="header-item">은행명</span>
+          <span class="header-item">상품명</span>
+          <span
+            v-for="period in periods"
+            :key="'header-' + period"
+            class="header-item"
+            @dblclick="sortByPeriod(period)"
+          >
+            {{ period }}개월
+          </span>
+        </div>
 
-    <!-- 데이터가 없을 때 로딩 메시지 -->
-    <div v-if="!filteredSavings.length" class="loading-message">
-      데이터를 로드 중입니다...
-    </div>
-    <!-- 데이터가 있을 때 -->
-    <div v-else>
-      <table class="saving-table">
-        <thead>
-          <tr>
-            <th>은행명</th>
-            <th>상품명</th>
-            <th v-for="period in periods" :key="'header-' + period">
-              {{ period }}개월
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <SavingListItem
-            v-for="saving in filteredSavings"
-            :key="saving.id"
-            :saving="saving"
-            :periods="periods"
+        <!-- 필터 입력 -->
+        <div class="filters">
+          <label for="bank">은행명</label>
+          <input 
+            type="text" 
+            id="bank" 
+            v-model="bank" 
+            placeholder="은행명을 입력하세요" 
           />
-        </tbody>
-      </table>
+          <label for="period">기간</label>
+          <select id="period" v-model="selectedPeriod">
+            <option value="">모든 기간</option>
+            <option v-for="period in periods" :key="period" :value="period">
+              {{ period }}개월
+            </option>
+          </select>
+          <label for="count">검색된 상품 수 : </label>
+          <button id="count">{{ filteredSavings.length }}</button>
+          <hr />
+        </div>
+        <!-- SavingListItem 컴포넌트 -->
+        <div v-for="saving in filteredSavings" :key="saving.id">
+          <SavingListItem :saving="saving" :highlight-period="selectedPeriod" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -54,18 +55,19 @@ import { ref, computed, onMounted } from 'vue';
 import { useFinanceStore } from '@/stores/finance';
 import SavingListItem from './SavingListItem.vue';
 
+// 스토어 및 필터 상태
+const savings = ref([])
 const financeStore = useFinanceStore();
-
-const savings = ref([]);
 const bank = ref('');
 const selectedPeriod = ref('');
 const periods = [6, 12, 24, 36]; // 개월 수 정의
 
 onMounted(async () => {
-  await financeStore.fetchSavings(); // 스토어에서 적금 데이터를 가져옴
-  savings.value = [...financeStore.savings] || []; // 적금 데이터 저장
-});
+  await financeStore.fetchSavings() // 스토어에서 데이터 로드
+  savings.value = [...financeStore.savings] || []// 로컬로 데이터 복사
+})
 
+// 필터링된 적금 리스트
 const filteredSavings = computed(() => {
   return savings.value.filter((saving) => {
     const bankFilter = saving.kor_co_nm

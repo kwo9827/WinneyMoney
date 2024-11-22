@@ -26,9 +26,10 @@
         </li>
       </ul>
     </div>
-
+    <div>
     <!-- 돌아가기 버튼 -->
     <router-link :to="{ name: 'DepositView' }" class="back-button">목록으로 돌아가기</router-link>
+    </div>
   </div>
 </template>
 
