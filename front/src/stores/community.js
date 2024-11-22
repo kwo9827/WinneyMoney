@@ -200,6 +200,26 @@ export const useCommunityStore = defineStore('community', () => {
       })
   }
 
+  // 게시글 좋아요
+  const toggleLikeArticle = function (articleId) {
+    return axios({
+      method: 'post',
+      url: `${API_URL}/articles/${articleId}/like/`, 
+      headers: {
+        Authorization: `Token ${accountStore.token}`,
+      },
+    })
+      .then((res) => {
+        console.log('좋아요 토글 성공:', res.data)
+        return res.data
+      })
+      .catch((err) => {
+        console.error('좋아요 토글 실패:', err)
+        throw err
+      })
+  }
+  
+
   return {
     articles,
     getArticles,
@@ -211,5 +231,6 @@ export const useCommunityStore = defineStore('community', () => {
     createComment,
     deleteComment,
     updateComment,
+    toggleLikeArticle,
   }
 }, { persist: true })

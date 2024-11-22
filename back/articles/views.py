@@ -54,6 +54,26 @@ def article_detail(request, article_pk):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# 게시글 좋아요
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_like_article(request, article_pk):
+    article = get_object_or_404(Article, pk=article_pk)
+    user = request.user
+
+    if user in article.like_users.all():
+        article.like_users.remove(user)
+        is_liked = False
+    else:
+        article.like_users.add(user)
+        is_liked = True
+
+    return Response({
+        'is_liked': is_liked,
+        'like_count': article.like_users.count(),
+    }, status=status.HTTP_200_OK)
+
+
 # 댓글 생성
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -92,3 +112,4 @@ def comment_update(request, comment_pk):
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

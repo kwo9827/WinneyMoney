@@ -24,24 +24,67 @@
               <li class="list-group-item">
                 <strong>이름:</strong> {{ store.lastName }}{{ store.firstName }}
               </li>
+              <li class="list-group-item">
+                <strong>팔로워:</strong> {{ store.followersCount }}
+                <button class="btn btn-link p-0 ms-2" @click="toggleFollowers">
+                  보기
+                </button>
+              </li>
+              <li class="list-group-item">
+                <strong>팔로잉:</strong> {{ store.followingCount }}
+                <button class="btn btn-link p-0 ms-2" @click="toggleFollowing">
+                  보기
+                </button>
+              </li>
             </ul>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 팔로워 및 팔로잉 리스트 모달 -->
+    <FollowListModal
+      v-if="showModal"
+      :type="modalType"
+      :list="modalList"
+      @close="showModal = false"
+    />
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref } from 'vue'
 import { useAccountStore } from '@/stores/accounts'
+import FollowListModal from '@/components/accounts/FollowListModal.vue'
 
 const store = useAccountStore()
 
-// 컴포넌트 마운트 시 사용자 프로필 정보를 가져옴
-onMounted(() => {
-  store.getUserProfile()
-})
+// 상태 관리
+const showModal = ref(false)
+const modalType = ref('') // 'followers' 또는 'following'
+const modalList = ref([])
+
+// 팔로우/언팔로우 토글
+const toggleFollow = () => {
+  store.toggleFollow()
+}
+
+// 팔로워 목록 보기
+const toggleFollowers = () => {
+  modalType.value = 'followers'
+  modalList.value = store.followers
+  showModal.value = true
+}
+
+// 팔로잉 목록 보기
+const toggleFollowing = () => {
+  modalType.value = 'following'
+  modalList.value = store.following
+  showModal.value = true
+}
+
+// 프로필 데이터 로드
+store.getUserProfile()
 </script>
 
 <style scoped>

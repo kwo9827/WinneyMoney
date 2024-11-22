@@ -1,6 +1,11 @@
 <template>
   <div class="comment-item">
-    <p class="fw-bold">{{ comment.user.username }}</p>
+    <p class="fw-bold">
+    <RouterLink v-if="comment.user"
+    :to="{ name: 'OtherUserProfile', params: { username: comment.user.username } }">
+      {{ comment.user.username }}
+    </RouterLink>
+    </p>
     <p>{{ comment.content }}</p>
     <small class="text-muted">{{ formatDate(comment.created_at) }}</small>
     <button
@@ -15,6 +20,7 @@
 
 <script setup>
 import { useCommunityStore } from '@/stores/community'
+import OtherUserProfile from '@/views/accounts/OtherUserProfile.vue';
 
 const props = defineProps({
   comment: Object,

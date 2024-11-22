@@ -179,6 +179,72 @@ export const useAccountStore = defineStore('accounts', () => {
       })
   }
 
+  // 팔로우/언팔로우
+  const toggleFollow = function (targetUsername) {
+    console.log(`${targetUsername} 팔로우 시작`) // 디버깅용 로그 추가
+    return axios({
+      method: 'post',
+      url: `${API_URL}/accounts/follow/${targetUsername}/`,
+      headers: { Authorization: `Token ${token.value}` },
+    })
+      .then((res) => {
+        console.log(`${targetUsername} 팔로우/언팔로우 성공:`, res.data) // 응답 데이터 출력
+        alert(res.data.message) // 성공 메시지 표시
+      })
+      .catch((err) => {
+        console.error(`${targetUsername} 팔로우/언팔로우 실패:`, err.response?.data)
+        alert('팔로우/언팔로우에 실패했습니다. 다시 시도해주세요.')
+      })
+  }
+
+  // 팔로잉 목록 가져오기
+  const getFollowingList = function () {
+    return axios({
+      method: 'get',
+      url: `${API_URL}/accounts/following/`,
+      headers: { Authorization: `Token ${token.value}` },
+    })
+      .then((res) => {
+        console.log('팔로잉 목록 가져오기 성공:', res.data)
+        return res.data // 팔로잉 리스트 반환
+      })
+      .catch((err) => {
+        console.error('팔로잉 목록 가져오기 실패:', err.response?.data)
+      })
+  }
+
+  // 팔로워 목록 가져오기
+  const getFollowersList = function () {
+    return axios({
+      method: 'get',
+      url: `${API_URL}/accounts/followers/`,
+      headers: { Authorization: `Token ${token.value}` },
+    })
+      .then((res) => {
+        console.log('팔로워 목록 가져오기 성공:', res.data)
+        return res.data // 팔로워 리스트 반환
+      })
+      .catch((err) => {
+        console.error('팔로워 목록 가져오기 실패:', err.response?.data)
+      })
+  }
+
+  // 다른 사람 프로필
+  const getOtherUserProfile = function (username) {
+    return axios({
+      method: 'get',
+      url: `${API_URL}/accounts/detail/${username}/`,
+      headers: { Authorization: `Token ${token.value}` },
+    })
+      .then((res) => {
+        return res.data // 프로필 데이터 반환
+      })
+      .catch((err) => {
+        console.error('다른 사용자 프로필 가져오기 실패:', err.response?.data)
+        throw err
+      })
+  }
+  
   return {
     API_URL,
     token,
@@ -196,5 +262,9 @@ export const useAccountStore = defineStore('accounts', () => {
     updateProfile,
     resetPassword,
     changePassword,
+    toggleFollow,
+    getFollowingList,
+    getFollowersList,
+    getOtherUserProfile,
   }
 }, { persist: true })

@@ -24,12 +24,16 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
-    favorite_products_count = serializers.SerializerMethodField()
-    favorite_products = DepositProductsSerializer(many=True, read_only=True)
+    favorite_deposits = DepositProductsSerializer(many=True, read_only=True)
+    favorite_savings = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'first_name', 'last_name', 'followers_count', 'following_count', 'favorite_products_count', 'favorite_products']
+        fields = [
+            'username', 'email', 'first_name', 'last_name', 
+            'followers_count', 'following_count',
+            'favorite_deposits', 'favorite_savings'
+        ]
         read_only_fields = ['username']
 
     def get_followers_count(self, obj):
@@ -38,8 +42,15 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_following_count(self, obj):
         return obj.following.count()
 
-    def get_favorite_products_count(self, obj):
-        return obj.favorite_products.count()
+    def get_favorite_savings(self, obj):
+        return [
+            {
+                "id": saving.id,
+                "name": saving.fin_prdt_nm,
+                "company": saving.kor_co_nm
+            }
+            for saving in obj.favorite_savings.all()
+        ]
 
 # 비밀번호 변경
 class PasswordChangeSerializer(serializers.Serializer):
