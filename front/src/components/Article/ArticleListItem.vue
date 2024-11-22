@@ -3,11 +3,18 @@
     <div class="card h-100 shadow-sm">
       <div class="card-body">
         <h5 class="card-title">{{ article.title }}</h5>
-        <!--글 번호 -->
-        <!-- <h6 class="card-subtitle mb-2 text-muted">글 번호: {{ article.id }}</h6> -->
-
-        <!--작성자 여부에 따라 표시창 다름 -->
-        <h6 class="card-subtitle mb-2 text-muted">작성자: {{ article.user ? article.user.username : '알 수 없음' }}</h6>
+        <!--작성자 이름 클릭 시 프로필로 이동-->
+        <h6 class="card-subtitle mb-2 text-muted">
+          작성자: 
+          <RouterLink
+            v-if="article.user"
+            :to="{ name: 'OtherUserProfile', params: { username: article.user.username } }"
+            class="author-link"
+          >
+            {{ article.user.username }}
+          </RouterLink>
+          <span v-else>알 수 없음</span>
+        </h6>
         <p class="card-text">{{ truncateContent(article.content) }}</p>
       </div>
       <div class="card-footer bg-transparent border-top-0">
@@ -18,7 +25,6 @@
         >
           상세보기
         </RouterLink>
-
       </div>
     </div>
   </div>
@@ -34,7 +40,6 @@ defineProps({
 const truncateContent = (content) => {
   return content.length > 100 ? content.slice(0, 100) + '...' : content
 }
-
 </script>
 
 <style scoped>
@@ -63,5 +68,17 @@ const truncateContent = (content) => {
 .btn-outline-primary:hover {
   background-color: #3498db;
   color: white;
+}
+
+/* 작성자 링크 스타일 */
+.author-link {
+  text-decoration: none;
+  color: #3498db;
+  font-weight: bold;
+}
+
+.author-link:hover {
+  text-decoration: underline;
+  color: #2980b9;
 }
 </style>

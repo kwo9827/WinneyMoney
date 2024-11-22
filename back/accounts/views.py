@@ -10,13 +10,17 @@ from rest_framework import status
 
 User = get_user_model()
 
-# 회원 상세 페이지
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_detail(request, username):
     user = get_object_or_404(User, username=username)
+    # 현재 로그인한 사용자가 요청된 사용자를 팔로우하고 있는지 확인
+    is_following = user.followers.filter(pk=request.user.pk).exists()
     serializer = ProfileSerializer(user, context={'request': request})
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response({
+        'profile': serializer.data,
+        'is_following': is_following, 
+    }, status=status.HTTP_200_OK)
 
 # 회원탈퇴
 @api_view(['DELETE'])

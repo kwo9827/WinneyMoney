@@ -10,6 +10,7 @@ import LogInView from '@/views/accounts/LogInView.vue'
 import ProfileView from '@/views/accounts/ProfileView.vue'
 import SignUpView from '@/views/accounts/SignUpView.vue'
 import EditProfileView from '@/views/accounts/EditProfileView.vue'
+import OtherUserProfile from '@/views/accounts/OtherUserProfile.vue'
 
 // 게시글 기능
 import ArticleView from '@/views/articles/ArticleView.vue'
@@ -82,11 +83,11 @@ const router = createRouter({
       name: 'EditProfileView',
       component: EditProfileView,
     },
-    // 포트폴리오 상세정보
+    // 다른 사람 프로필
     {
-      path: '/profile/portfolio/:portfolio_id',
-      name: 'PortfolioDetailView',
-      component: PortfolioDetailView
+      path: '/detail/:username',
+      name: 'OtherUserProfile',
+      component: OtherUserProfile,
     },
     // 게시판 목록 및 작성
     {

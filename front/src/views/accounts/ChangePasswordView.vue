@@ -77,7 +77,6 @@ const changePassword = function () {
 
   store.changePassword(payload)
     .then(() => {
-      alert('비밀번호가 성공적으로 변경되었습니다.')
       router.push({ name: 'ProfileView' })
     })
     .catch((err) => {

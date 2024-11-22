@@ -64,6 +64,7 @@ function placesSearchCB(data, status, pagination) {
     map.setBounds(bounds);
   } else {
     console.error("검색 결과가 없습니다.");
+    alert('검색 결과가 없습니다.')
   }
 }
 
