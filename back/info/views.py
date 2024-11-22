@@ -1,8 +1,11 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import requests
+
+from django.http import JsonResponse
+from django.core.paginator import Paginator
 from django.conf import settings
 from datetime import datetime, timedelta
+import requests
 
 @api_view(['GET'])
 def exchange(request, fromCountry, price):
@@ -68,3 +71,37 @@ def exchange(request, fromCountry, price):
 
     # return Response({"exchangeresult": exchangeresult, 'diff' : result})
     return Response({"exchangeresult": exchangeresult})
+
+def news(request):
+    query = '경제'
+    display_count = 100
+    page = int(request.GET.get('page', 1))
+    
+    url = 'https://openapi.naver.com/v1/search/news.json'
+    headers = {
+        'X-Naver-Client-Id': settings.NAVER_CLIENT_ID,
+        'X-Naver-Client-Secret': settings.NAVER_CLIENT_SECRET,
+    }
+    params = {
+        'query': query,
+        'display': display_count,
+        'start': (page - 1) * 10 + 1,  # 페이지 시작 번호
+        'sort': 'date',
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code != 200:
+        return JsonResponse({'error': '네이버 API 호출 실패'}, status=response.status_code)
+
+    news_data = response.json().get('items', [])
+    
+    # 페이지네이션
+    paginator = Paginator(news_data, 10)  # 한 페이지당 10개
+    current_page_data = paginator.get_page(page)
+
+    return JsonResponse({
+        'news': list(current_page_data),
+        'total_pages': paginator.num_pages,
+        'current_page': current_page_data.number,
+    }, safe=False)
+

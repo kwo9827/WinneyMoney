@@ -18,6 +18,7 @@
             @dblclick="sortByPeriod(period)"
           >
             {{ period }}개월
+<<<<<<< HEAD
           </span>
         </div>
 
@@ -45,6 +46,18 @@
         <div v-for="deposit in filteredDeposits" :key="deposit.id">
           <DepositListItem :deposit="deposit" :highlight-period="selectedPeriod" />
         </div>
+=======
+          </option>
+        </select>
+        <label for="count">검색된 상품 수 : </label>
+        <button id="count">{{ filteredDeposits.length }}</button>
+        <hr />
+      </div>
+
+      <!-- DepositListItem 컴포넌트 -->
+      <div v-for="deposit in filteredDeposits" :key="deposit.id">
+        <DepositListItem :deposit="deposit" :highlight-period="Number(selectedPeriod)" />
+>>>>>>> 17bf9dd4dc512e9e186e11c7aff0391e9f89a847
       </div>
     </div>
   </div>
@@ -52,49 +65,37 @@
 
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useAccountStore } from '@/stores/accounts';
-import { useFinanceStore } from '@/stores/finance';
-import axios from 'axios';
-import DepositListItem from './DepositListItem.vue';
+import { ref, computed, onMounted } from 'vue'
+import { useFinanceStore } from '@/stores/finance'
+import DepositListItem from './DepositListItem.vue'
 
-// 예금 데이터 및 필터 상태
-const deposits = ref([]); // 반드시 빈 배열로 초기화
-const bank = ref('');
-const selectedPeriod = ref('');
-const periods = [6, 12, 24, 36];
+// 스토어 사용
+const financeStore = useFinanceStore()
 
-const store = useAccountStore();
-const financeStore = useFinanceStore();
-const API_URL = store.API_URL;
+// 필터 상태
+const bank = ref('')
+const selectedPeriod = ref('')
+const periods = [6, 12, 24, 36]
 
 // API 호출 및 데이터 로드
 onMounted(() => {
-  axios.get(`${API_URL}/finlife/deposit-products/`) // API 엔드포인트
-    .then(res => {
-      console.log('API 응답:', res.data);
-      financeStore.getDeposit(res.data); // API 응답 데이터를 저장
-    }).then(() => {
-      deposits.value = financeStore.deposits;
-    })
-    .catch(err => {
-      console.error('API 호출 오류:', err);
-    });
-});
+  financeStore.fetchDeposits() // 스토어 메서드 호출
+})
 
 // 필터링된 예금 리스트
 const filteredDeposits = computed(() => {
-  return deposits.value.filter(deposit => {
+  return financeStore.deposits.filter(deposit => {
     // 은행명 필터
-    const bankFilter = deposit.kor_co_nm.toLowerCase().includes(bank.value.toLowerCase());
+    const bankFilter = deposit.kor_co_nm.toLowerCase().includes(bank.value.toLowerCase())
     // 기간 필터
-    const periodFilter = !selectedPeriod.value || deposit.options.some(option => option.save_trm === parseInt(selectedPeriod.value));
-    return bankFilter && periodFilter;
-  });
-});
+    const periodFilter = !selectedPeriod.value || deposit.options.some(option => option.save_trm === Number(selectedPeriod.value))
+    return bankFilter && periodFilter
+  })
+})
 
 // 기간별 정렬
 const sortByPeriod = (period) => {
+<<<<<<< HEAD
   deposits.value.sort((a, b) => {
     const aOption = a.options.find(option => option.save_trm === period);
     const bOption = b.options.find(option => option.save_trm === period);
@@ -103,6 +104,16 @@ const sortByPeriod = (period) => {
     return bRate - aRate; // 내림차순 정렬
   });
 };
+=======
+  filteredDeposits.value.sort((a, b) => {
+    const aOption = a.options.find(option => option.save_trm === period)
+    const bOption = b.options.find(option => option.save_trm === period)
+    const aRate = aOption ? aOption.intr_rate : 0 // 해당 기간 금리가 없으면 0
+    const bRate = bOption ? bOption.intr_rate : 0 // 해당 기간 금리가 없으면 0
+    return bRate - aRate // 내림차순 정렬
+  })
+}
+>>>>>>> 17bf9dd4dc512e9e186e11c7aff0391e9f89a847
 </script>
 
 <style scoped>
