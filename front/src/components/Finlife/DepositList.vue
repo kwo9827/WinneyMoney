@@ -2,7 +2,7 @@
   <div>
     <div class="container">
       <!-- 데이터가 없을 때 로딩 메시지 -->
-      <div v-if="!deposits.length">
+      <div v-if="!financeStore.deposits.length">
         <p>데이터를 로드 중입니다...</p>
       </div>
       <!-- 데이터가 있을 때 -->
@@ -18,7 +18,6 @@
             @dblclick="sortByPeriod(period)"
           >
             {{ period }}개월
-<<<<<<< HEAD
           </span>
         </div>
 
@@ -46,18 +45,6 @@
         <div v-for="deposit in filteredDeposits" :key="deposit.id">
           <DepositListItem :deposit="deposit" :highlight-period="selectedPeriod" />
         </div>
-=======
-          </option>
-        </select>
-        <label for="count">검색된 상품 수 : </label>
-        <button id="count">{{ filteredDeposits.length }}</button>
-        <hr />
-      </div>
-
-      <!-- DepositListItem 컴포넌트 -->
-      <div v-for="deposit in filteredDeposits" :key="deposit.id">
-        <DepositListItem :deposit="deposit" :highlight-period="Number(selectedPeriod)" />
->>>>>>> 17bf9dd4dc512e9e186e11c7aff0391e9f89a847
       </div>
     </div>
   </div>
@@ -73,18 +60,20 @@ import DepositListItem from './DepositListItem.vue'
 const financeStore = useFinanceStore()
 
 // 필터 상태
+const deposits = ref([])
 const bank = ref('')
-const selectedPeriod = ref('')
+const selectedPeriod = ref(0)
 const periods = [6, 12, 24, 36]
 
-// API 호출 및 데이터 로드
-onMounted(() => {
-  financeStore.fetchDeposits() // 스토어 메서드 호출
+// 데이터 로드
+onMounted(async () => {
+  await financeStore.fetchDeposits() // 스토어에서 데이터 로드
+  deposits.value = [...financeStore.deposits] || []// 로컬로 데이터 복사
 })
 
 // 필터링된 예금 리스트
 const filteredDeposits = computed(() => {
-  return financeStore.deposits.filter(deposit => {
+  return deposits.value.filter(deposit => {
     // 은행명 필터
     const bankFilter = deposit.kor_co_nm.toLowerCase().includes(bank.value.toLowerCase())
     // 기간 필터
@@ -95,7 +84,6 @@ const filteredDeposits = computed(() => {
 
 // 기간별 정렬
 const sortByPeriod = (period) => {
-<<<<<<< HEAD
   deposits.value.sort((a, b) => {
     const aOption = a.options.find(option => option.save_trm === period);
     const bOption = b.options.find(option => option.save_trm === period);
@@ -104,16 +92,6 @@ const sortByPeriod = (period) => {
     return bRate - aRate; // 내림차순 정렬
   });
 };
-=======
-  filteredDeposits.value.sort((a, b) => {
-    const aOption = a.options.find(option => option.save_trm === period)
-    const bOption = b.options.find(option => option.save_trm === period)
-    const aRate = aOption ? aOption.intr_rate : 0 // 해당 기간 금리가 없으면 0
-    const bRate = bOption ? bOption.intr_rate : 0 // 해당 기간 금리가 없으면 0
-    return bRate - aRate // 내림차순 정렬
-  })
-}
->>>>>>> 17bf9dd4dc512e9e186e11c7aff0391e9f89a847
 </script>
 
 <style scoped>
