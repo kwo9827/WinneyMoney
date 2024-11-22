@@ -1,7 +1,6 @@
 <template>
-  <h1>적금</h1>
   <div>
-    <div class="container mt-5">
+    <div class="container">
       <!-- 테이블 헤더 -->
       <div class="table-header">
         <span class="header-item">은행명</span>
@@ -89,7 +88,7 @@ const filteredSavings = computed(() => {
 
 // 기간별 정렬
 const sortByPeriod = (period) => {
-  filteredSavings.value.sort((a, b) => {
+  savings.value.sort((a, b) => {
     const aOption = a.options.find(option => option.save_trm === period);
     const bOption = b.options.find(option => option.save_trm === period);
     const aRate = aOption ? aOption.intr_rate : 0; // 해당 기간 금리가 없으면 0

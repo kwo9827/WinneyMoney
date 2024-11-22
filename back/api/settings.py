@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'accounts',
     'finlife',
     'info',
+    'portfolios',
 
     # DRF
     'rest_framework',

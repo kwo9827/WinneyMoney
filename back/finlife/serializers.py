@@ -25,12 +25,13 @@ class DepositProductsSerializer(serializers.ModelSerializer):
     def get_favorite_count(self, obj):
         # related_name이 'favorited_deposit_products'로 변경되었으므로 수정
         return obj.favorited_by.count()
-
-    # 즐겨찾기 확인
-    def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        return user.is_authenticated and obj.favorited_by.filter(id=user.id).exists()
     
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            user = request.user
+            return user.is_authenticated and obj.favorited_by.filter(id=user.id).exists()
+        return False
 
 class SavingOptionsSerializer(serializers.ModelSerializer):
     
@@ -57,5 +58,8 @@ class SavingProductsSerializer(serializers.ModelSerializer):
 
     # 즐겨찾기 확인
     def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        return user.is_authenticated and obj.favorited_by.filter(id=user.id).exists()
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            user = request.user
+            return user.is_authenticated and obj.favorited_by.filter(id=user.id).exists()
+        return False

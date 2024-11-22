@@ -31,6 +31,9 @@ import DepositDetailView from '@/views/finance/deposit/DepositDetailView.vue'
 import SavingView from '@/views/finance/saving/SavingView.vue'
 import SavingDetailView from '@/views/finance/saving/SavingDetailView.vue'
 
+// portfolio 기능
+import PortfolioDetailView from '@/views/portfolios/PortfolioDetailView.vue'
+
 import { useAccountStore } from '@/stores/accounts'
 
 // 라우터 설정
@@ -78,6 +81,12 @@ const router = createRouter({
       path: '/accounts/edit/',
       name: 'EditProfileView',
       component: EditProfileView,
+    },
+    // 포트폴리오 상세정보
+    {
+      path: '/profile/portfolio/:portfolio_id',
+      name: 'PortfolioDetailView',
+      component: PortfolioDetailView
     },
     // 게시판 목록 및 작성
     {
@@ -132,22 +141,24 @@ const router = createRouter({
       path: '/finance',
       name: 'FinanceView',
       component: FinanceView,
-    },
-    {
-      path: '/finance/deposit',
-      name: 'DepositView',
-      component: DepositView,
+      children: [
+        {
+          path: 'deposit',
+          name: 'DepositView',
+          component: DepositView,
+        },
+        {
+          path: 'saving',
+          name: 'SavingView',
+          component: SavingView,
+        },
+      ],
     },
     //예금 상품 상세
     {
       path: '/finance/deposit/:product_id',
       name: 'DepositDetailView',
       component: DepositDetailView,
-    },
-    {
-      path: '/finance/saving',
-      name: 'SavingView',
-      component: SavingView,
     },
      //적금 상품 상세
     {

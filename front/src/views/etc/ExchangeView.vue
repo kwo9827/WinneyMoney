@@ -1,10 +1,11 @@
 <template>
-  <div>
-    <h1>환전 페이지</h1>
+  <div class="container mt-5">
+    <ExchangeItem />
   </div>
 </template>
 
 <script setup>
+import ExchangeItem from '@/components/Info/ExchangeItem.vue';
 
 </script>
 
