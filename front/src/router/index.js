@@ -6,7 +6,7 @@ import HomeView from '@/views/HomeView.vue'
 // account 기능
 import ChangePasswordView from '@/views/accounts/ChangePasswordView.vue'
 import FindPasswordView from '@/views/accounts/FindPasswordView.vue'
-import LoginView from '@/views/accounts/LoginView.vue'
+import LogInView from '@/views/accounts/LogInView.vue'
 import ProfileView from '@/views/accounts/ProfileView.vue'
 import SignUpView from '@/views/accounts/SignUpView.vue'
 import EditProfileView from '@/views/accounts/EditProfileView.vue'
@@ -47,7 +47,7 @@ const router = createRouter({
     {
       path: '/accounts/auth/logIn',
       name: 'LogInView',
-      component: LoginView,
+      component: LogInView,
     },
     // 회원가입
     {
