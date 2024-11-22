@@ -6,7 +6,7 @@ import HomeView from '@/views/HomeView.vue'
 // account 기능
 import ChangePasswordView from '@/views/accounts/ChangePasswordView.vue'
 import FindPasswordView from '@/views/accounts/FindPasswordView.vue'
-import LogInView from '@/views/accounts/LogInView.vue'
+import LoginView from '@/views/accounts/LoginView.vue'
 import ProfileView from '@/views/accounts/ProfileView.vue'
 import SignUpView from '@/views/accounts/SignUpView.vue'
 import EditProfileView from '@/views/accounts/EditProfileView.vue'
@@ -25,8 +25,12 @@ import NotFoundView from '@/views/etc/NotFoundView.vue'
 
 // finance 기능
 import CartView from '@/views/finance/CartView.vue'
-import InterestDetailView from '@/views/finance/InterestDetailView.vue'
-import InterestView from '@/views/finance/InterestView.vue'
+import FinanceView from '@/views/finance/FinanceView.vue'
+import DepositView from '@/views/finance/deposit/DepositView.vue'
+import DepositDetailView from '@/views/finance/deposit/DepositDetailView.vue'
+import SavingView from '@/views/finance/saving/SavingView.vue'
+import SavingDetailView from '@/views/finance/saving/SavingDetailView.vue'
+
 import { useAccountStore } from '@/stores/accounts'
 
 // 라우터 설정
@@ -43,7 +47,7 @@ const router = createRouter({
     {
       path: '/accounts/auth/logIn',
       name: 'LogInView',
-      component: LogInView,
+      component: LoginView,
     },
     // 회원가입
     {
@@ -123,17 +127,33 @@ const router = createRouter({
       name: 'CartView',
       component: CartView,
     },
-    // 상품 상세
+    //예/적금 조회
     {
-      path: '/interest-detail',
-      name: 'InterestDetailView',
-      component: InterestDetailView,
+      path: '/finance',
+      name: 'FinanceView',
+      component: FinanceView,
     },
-    // 상품
     {
-      path: '/interest',
-      name: 'InterestView',
-      component: InterestView,
+      path: '/finance/deposit',
+      name: 'DepositView',
+      component: DepositView,
+    },
+    //예금 상품 상세
+    {
+      path: '/finance/deposit/:product_id',
+      name: 'DepositDetailView',
+      component: DepositDetailView,
+    },
+    {
+      path: '/finance/saving',
+      name: 'SavingView',
+      component: SavingView,
+    },
+     //적금 상품 상세
+    {
+      path: '/finance/saving/:product_id',
+      name: 'SavingDetailView',
+      component: SavingDetailView,
     },
     // 추천 시스템
     {

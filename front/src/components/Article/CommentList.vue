@@ -24,7 +24,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCommunityStore } from '@/stores/community'
 import { useAccountStore } from '@/stores/accounts'
-import CommentListItem from '@/components/CommentListItem.vue'
+import CommentListItem from '@/components/Article/CommentListItem.vue'
 
 const communityStore = useCommunityStore()
 const accountStore = useAccountStore()
