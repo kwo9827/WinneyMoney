@@ -1,18 +1,23 @@
 <template>
-  <div class="container mt-5">
-    <div class="header text-center mb-4">
+  <v-container class="mt-5 py-5" elevation="2">
+    <!-- 헤더 섹션 -->
+    <div class="text-center mb-4">
       <h1 class="display-4 text-primary">WinneyMoney</h1>
       <p class="lead">우리는 승승장구</p>
     </div>
+
+    <!-- 글 작성 버튼 -->
     <div class="text-center mb-4">
-      <RouterLink :to="{ name: 'CreateView' }" class="btn btn-primary btn-lg">
-        <i class="fas fa-plus-circle me-2"></i>글 작성하기
-      </RouterLink>
+      <v-btn color="primary" large class="btn-lg" :to="{ name: 'CreateView' }" elevation="2">
+        <v-icon left>mdi-plus-circle</v-icon> 글 작성하기
+      </v-btn>
     </div>
-    <div class="row">
+
+    <!-- 게시글 리스트 -->
+    <v-row>
       <ArticleList :articles="store.articles" />
-    </div>
-  </div>
+    </v-row>
+  </v-container>
 </template>
 
 <script setup>
@@ -28,17 +33,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.container {
-  background-color: #f8f9fa;
-  border-radius: 1rem;
-  padding: 2rem;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
-
-.header {
-  margin-bottom: 2rem;
-}
-
 .display-4 {
   font-weight: bold;
   color: #3498db;
@@ -48,23 +42,25 @@ onMounted(() => {
   color: #7f8c8d;
 }
 
-.btn-primary {
-  background-color: #3498db;
-  border-color: #3498db;
+.v-btn {
   transition: all 0.3s ease;
 }
 
-.btn-primary:hover {
-  background-color: #2980b9;
-  border-color: #2980b9;
+.v-btn:hover {
   transform: translateY(-1px);
 }
 
+.v-container {
+  background-color: #f8f9fa;
+  border-radius: 1rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
 @media (max-width: 768px) {
-  .container {
+  .v-container {
     padding: 1rem;
   }
-  
+
   .display-4 {
     font-size: 2.5rem;
   }
