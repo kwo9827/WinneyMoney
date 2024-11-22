@@ -1,45 +1,55 @@
 <template>
-  <div class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card shadow">
-          <div class="card-body">
-            <h1 class="card-title text-center mb-4">게시글 수정</h1>
-            <form @submit.prevent="updateArticle">
-              <div class="form-group mb-3">
-                <label for="title" class="form-label">제목</label>
-                <input
-                  type="text"
-                  id="title"
-                  v-model="title"
-                  class="form-control"
-                  required
-                  placeholder="수정할 제목을 입력하세요"
-                />
+  <v-container class="mt-5">
+    <v-row justify="center">
+      <v-col cols="12" md="8">
+        <v-card elevation="3">
+          <v-card-text>
+            <h1 class="text-center mb-4" style="color: #3498db;">게시글 수정</h1>
+            <v-form @submit.prevent="updateArticle">
+              <!-- 제목 입력 -->
+              <v-text-field
+                v-model="title"
+                label="제목"
+                placeholder="수정할 제목을 입력하세요"
+                outlined
+                dense
+                required
+              ></v-text-field>
+
+              <!-- 내용 입력 -->
+              <v-textarea
+                v-model="content"
+                label="내용"
+                placeholder="수정할 내용을 입력하세요"
+                rows="5"
+                outlined
+                dense
+                required
+              ></v-textarea>
+
+              <!-- 제출 버튼 -->
+              <div class="d-grid mt-4">
+                <v-btn color="primary" large elevation="2" type="submit">
+                  수정하기
+                </v-btn>
               </div>
-              <div class="form-group mb-4">
-                <label for="content" class="form-label">내용</label>
-                <textarea
-                  id="content"
-                  v-model="content"
-                  class="form-control"
-                  rows="5"
-                  required
-                  placeholder="수정할 내용을 입력하세요"
-                ></textarea>
-              </div>
-              <div class="d-grid">
-                <button type="submit" class="btn btn-primary btn-lg">수정하기</button>
-              </div>
-              <div v-if="errorMessage" class="alert alert-danger mt-3">
+
+              <!-- 에러 메시지 -->
+              <v-alert
+                v-if="errorMessage"
+                type="error"
+                class="mt-3"
+                border="left"
+                prominent
+              >
                 {{ errorMessage }}
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+              </v-alert>
+            </v-form>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script setup>
@@ -94,32 +104,25 @@ const updateArticle = () => {
 </script>
 
 <style scoped>
-.card {
-  border: none;
+.v-card {
   border-radius: 15px;
+  padding: 2rem;
 }
 
-.card-title {
+.text-center {
   color: #3498db;
   font-weight: bold;
 }
 
-.form-control:focus {
-  border-color: #3498db;
-  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+.v-btn {
+  transition: all 0.3s ease;
 }
 
-.btn-primary {
-  background-color: #3498db;
-  border-color: #3498db;
+.v-btn:hover {
+  background-color: #2980b9 !important;
 }
 
-.btn-primary:hover {
-  background-color: #2980b9;
-  border-color: #2980b9;
-}
-
-.alert-danger {
+.v-alert {
   margin-top: 10px;
 }
 </style>

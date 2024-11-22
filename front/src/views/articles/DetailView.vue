@@ -1,58 +1,73 @@
 <template>
-<div class="container mt-5">
+  <v-container class="mt-5">
     <!-- 게시글 상세 -->
-    <div class="card shadow mb-4">
-      <div class="card-body">
-        <h1 class="card-title text-center mb-4">게시글 상세</h1>
+    <v-card elevation="3" class="mb-4">
+      <v-card-text>
+        <h1 class="text-center mb-4" style="color: #3498db;">게시글 상세</h1>
 
-        <div v-if="article && article.user" class="article-details">
-          <div class="row mb-3">
-            <div class="col-md-3 fw-bold">작성자:</div>
-            <div class="col-md-9">
+        <div v-if="article && article.user">
+          <!-- 작성자 -->
+          <v-row class="mb-3">
+            <v-col cols="3" class="fw-bold">작성자:</v-col>
+            <v-col cols="9">
               <RouterLink
                 :to="{ name: 'OtherUserProfile', params: { username: article.user.username } }"
                 class="author-link"
               >
                 {{ article.user.username }}
               </RouterLink>
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-3 fw-bold">제목:</div>
-            <div class="col-md-9">{{ article.title }}</div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-3 fw-bold">내용:</div>
-            <div class="col-md-9">{{ article.content }}</div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-3 fw-bold">좋아요:</div>
-            <div class="col-md-9">
-              <button
-                class="btn btn-outline-primary"
+            </v-col>
+          </v-row>
+
+          <!-- 제목 -->
+          <v-row class="mb-3">
+            <v-col cols="3" class="fw-bold">제목:</v-col>
+            <v-col cols="9">{{ article.title }}</v-col>
+          </v-row>
+
+          <!-- 내용 -->
+          <v-row class="mb-3">
+            <v-col cols="3" class="fw-bold">내용:</v-col>
+            <v-col cols="9">{{ article.content }}</v-col>
+          </v-row>
+
+          <!-- 좋아요 -->
+          <v-row class="mb-3">
+            <v-col cols="3" class="fw-bold">좋아요:</v-col>
+            <v-col cols="9">
+              <v-btn
+                icon
+                :color="isLikedByUser ? 'pink' : 'grey'"
                 @click="toggleLike"
               >
-                {{ isLikedByUser ? '❤' : '🤍' }}
-              </button>
+                <template v-if="isLikedByUser">
+                  <v-icon>mdi-heart</v-icon>
+                </template>
+                <template v-else>
+                  <v-icon>mdi-heart-outline</v-icon>
+                </template>
+              </v-btn>
               <span>{{ article.likes_count }}개</span>
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-3 fw-bold">작성일:</div>
-            <div class="col-md-9">{{ formatDate(article.created_at) }}</div>
-          </div>
+            </v-col>
+          </v-row>
+
+          <!-- 작성일 -->
+          <v-row class="mb-3">
+            <v-col cols="3" class="fw-bold">작성일:</v-col>
+            <v-col cols="9">{{ formatDate(article.created_at) }}</v-col>
+          </v-row>
         </div>
+
+        <!-- 로딩 상태 -->
         <div v-else class="text-center">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
         </div>
-      </div>
-    </div>
+      </v-card-text>
+    </v-card>
 
     <!-- 댓글 섹션 -->
-    <div class="card shadow">
-      <div class="card-body">
+    <v-card elevation="3">
+      <v-card-text>
         <h5 class="text-primary mb-4">댓글</h5>
         <!-- 댓글 목록 -->
         <div v-for="comment in comments" :key="comment.id" class="mb-3">
@@ -61,35 +76,45 @@
             <small class="text-muted">({{ formatDate(comment.created_at) }})</small>
           </p>
           <div v-if="isAuthor(comment.user.username)">
-            <button @click="editComment(comment)" class="btn btn-link">수정</button>
-            <button @click="deleteComment(comment.id)" class="btn btn-link text-danger">삭제</button>
+            <v-btn text small @click="editComment(comment)">수정</v-btn>
+            <v-btn text small color="error" @click="deleteComment(comment.id)">삭제</v-btn>
           </div>
         </div>
 
         <!-- 댓글 작성 -->
-        <textarea
+        <v-textarea
           v-model="newComment"
-          class="form-control"
+          label="댓글을 입력하세요"
           rows="2"
-          placeholder="댓글을 입력하세요"
-        ></textarea>
-        <button @click="addComment" class="btn btn-primary mt-2">댓글 작성</button>
-      </div>
-    </div>
+          outlined
+          dense
+        ></v-textarea>
+        <v-btn class="mt-2" color="primary" large @click="addComment">
+          댓글 작성
+        </v-btn>
+      </v-card-text>
+    </v-card>
 
     <!-- 뒤로가기 및 게시글 수정/삭제 -->
     <div class="mt-4 text-center">
-      <button @click="goBack" class="btn btn-secondary me-2">뒤로 가기</button>
-      <RouterLink
+      <v-btn color="secondary" class="me-2" @click="goBack">뒤로 가기</v-btn>
+      <v-btn
         v-if="isArticleAuthor"
+        color="primary"
+        class="me-2"
         :to="{ name: 'UpdateView', params: { id: article.id } }"
-        class="btn btn-primary"
       >
         수정하기
-      </RouterLink>
-      <button v-if="isArticleAuthor" @click="deleteArticle" class="btn btn-danger">삭제하기</button>
+      </v-btn>
+      <v-btn
+        v-if="isArticleAuthor"
+        color="error"
+        @click="deleteArticle"
+      >
+        삭제하기
+      </v-btn>
     </div>
-  </div>
+  </v-container>
 </template>
 
 <script setup>
@@ -121,54 +146,53 @@ const isAuthor = (username) => {
 
 // 게시글 가져오기
 onMounted(() => {
-  const articleId = route.params.id;
-  console.log('현재 게시글 ID:', articleId);
+  const articleId = route.params.id
 
   communityStore
     .getArticleDetail(articleId)
     .then((data) => {
-      article.value = data.article;
-      comments.value = data.comments;
-      isLikedByUser.value = data.article.liked_by_user; // 좋아요 상태 반영
+      article.value = data.article
+      comments.value = data.comments
+      isLikedByUser.value = data.article.liked_by_user
     })
     .catch((err) => {
-      console.error('게시글 상세 가져오기 실패:', err);
-      alert('게시글 정보를 가져오는 데 실패했습니다.');
-      router.push({ name: 'ArticleView' }); // 게시판으로 이동
-    });
-});
+      console.error('게시글 상세 가져오기 실패:', err)
+      alert('게시글 정보를 가져오는 데 실패했습니다.')
+      router.push({ name: 'ArticleView' })
+    })
+})
 
 // 게시글 좋아요 토글
 const toggleLike = () => {
-  const articleId = route.params.id;
+  const articleId = route.params.id
 
   communityStore
     .toggleLikeArticle(articleId)
     .then(() => {
-      isLikedByUser.value = !isLikedByUser.value; // 좋아요 상태 업데이트
-      article.value.likes_count += isLikedByUser.value ? 1 : -1; // 좋아요 수 업데이트
+      isLikedByUser.value = !isLikedByUser.value
+      article.value.likes_count += isLikedByUser.value ? 1 : -1
     })
     .catch((err) => {
-      console.error('좋아요 토글 실패:', err);
-      alert('좋아요를 처리하는 데 실패했습니다.');
-    });
-};
+      console.error('좋아요 토글 실패:', err)
+      alert('좋아요를 처리하는 데 실패했습니다.')
+    })
+}
 
 // 게시글 삭제
 const deleteArticle = () => {
-  const articleId = route.params.id;
+  const articleId = route.params.id
 
   communityStore
     .deleteArticle(articleId)
     .then(() => {
-      alert('게시글이 성공적으로 삭제되었습니다.');
-      router.push({ name: 'ArticleView' }); // 게시판으로 이동
+      alert('게시글이 성공적으로 삭제되었습니다.')
+      router.push({ name: 'ArticleView' })
     })
     .catch((err) => {
-      console.error('게시글 삭제 실패:', err);
-      alert('게시글 삭제에 실패했습니다.');
-    });
-};
+      console.error('게시글 삭제 실패:', err)
+      alert('게시글 삭제에 실패했습니다.')
+    })
+}
 
 // 댓글 작성
 const addComment = () => {
@@ -242,30 +266,6 @@ const goBack = () => {
 </script>
 
 <style scoped>
-.card {
-  border-radius: 15px;
-}
-
-.card-title {
-  color: #3498db;
-  font-weight: bold;
-}
-
-textarea {
-  resize: none;
-}
-
-.btn-primary {
-  background-color: #3498db;
-  border-color: #3498db;
-}
-
-.btn-primary:hover {
-  background-color: #2980b9;
-  border-color: #2980b9;
-}
-
-/* 작성자 링크 스타일 */
 .author-link {
   text-decoration: none;
   color: #3498db;

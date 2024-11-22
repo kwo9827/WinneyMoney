@@ -1,10 +1,12 @@
 <template>
-  <header>
-    <nav class="nav-container">
-      <div class="nav-center">
+  <v-app> <!-- Vuetify의 최상위 컴포넌트 -->
+    <v-app-bar app>
+      <v-container class="nav-container">
+        <!-- 로고 -->
         <RouterLink :to="{ name: 'HomeView' }" class="logo">
           <span class="logo-text">WinneyMoney</span>
         </RouterLink>
+<<<<<<< HEAD
       </div>
       <div class="nav-left">
         <RouterLink :to="{ name: 'FinanceView' }" class="nav-item">예/적금 상품목록</RouterLink>
@@ -39,6 +41,56 @@
   <main>
     <RouterView />
   </main>
+=======
+
+        <!-- 왼쪽 네비게이션 -->
+        <v-row class="nav-left">
+          <v-btn text :to="{ name: 'FinanceView' }">예/적금 상품목록</v-btn>
+          <v-btn text :to="{ name: 'ArticleView' }">유저 게시판</v-btn>
+          <v-btn text :to="{ name: 'NewsHomeView' }">뉴스</v-btn>
+          <v-btn text :to="{ name: 'ExchangeView' }">환전 하기</v-btn>
+          <v-btn text :to="{ name: 'MapView' }">지도 보기</v-btn>
+        </v-row>
+
+        <!-- 오른쪽 네비게이션 -->
+        <v-row class="nav-right">
+          <template v-if="store.isLogin">
+            <!-- 드롭다운 프로필 -->
+            <v-menu offset-y>
+              <template #activator="{ props }">
+                <div class="profile-container" v-bind="props">
+                  <img class="profile-img" src="https://via.placeholder.com/40" alt="프로필 이미지" />
+                  <span class="username">{{ store.username }}</span>
+                </div>
+              </template>
+              <v-list>
+                <v-list-item :to="{ name: 'ProfileView' }" link>
+                  <v-list-item-title>내 프로필</v-list-item-title>
+                </v-list-item>
+                <v-list-item :to="{ name: 'EditProfileView' }" link>
+                  <v-list-item-title>회원정보 변경</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="logOut">
+                  <v-list-item-title>로그아웃</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="confirmDeleteAccount">
+                  <v-list-item-title>회원탈퇴</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </template>
+          <template v-else>
+            <v-btn text :to="{ name: 'LogInView' }">로그인</v-btn>
+            <v-btn text :to="{ name: 'SignUpView' }">회원가입</v-btn>
+          </template>
+        </v-row>
+      </v-container>
+    </v-app-bar>
+    <v-main>
+      <RouterView />
+    </v-main>
+  </v-app>
+>>>>>>> 49a65e57698ee39bd963daff82bd4284ff1195dc
 </template>
 
 <script setup>
@@ -47,12 +99,6 @@ import { RouterView, RouterLink } from 'vue-router'
 import { useAccountStore } from '@/stores/accounts'
 
 const store = useAccountStore()
-
-const dropdownVisible = ref(false)
-
-const toggleDropdown = () => {
-  dropdownVisible.value = !dropdownVisible.value
-}
 
 const logOut = () => {
   store.logOut()
@@ -70,27 +116,9 @@ const confirmDeleteAccount = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background-color: #f8f9fa;
-}
-
-.nav-left, .nav-right {
-  display: flex;
-  gap: 1rem;
-}
-
-a {
-  text-decoration: none;
-  color: #007bff;
-  font-weight: bold;
-}
-
-a:hover {
-  color: #0056b3;
 }
 
 .profile-container {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -108,33 +136,7 @@ a:hover {
   color: #007bff;
 }
 
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  z-index: 1000;
-}
-
-.dropdown-menu p, 
-.dropdown-menu a {
-  color: black;
-  text-decoration: none;
-  cursor: pointer;
-  margin: 0;
-  font-weight: normal; /* 글자를 기본 두께로 설정 */
-}
-
-.dropdown-menu p:hover, 
-.dropdown-menu a:hover {
-  color: #0056b3; /* 글씨 색상 */
-  font-weight: bold; /* 글씨 진하게  */
+.v-btn {
+  text-transform: none; /* 버튼 텍스트 대문자 방지 */
 }
 </style>

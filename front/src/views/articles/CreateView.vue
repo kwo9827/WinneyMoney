@@ -1,42 +1,49 @@
 <template>
-  <div class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card shadow">
-          <div class="card-body">
-            <h1 class="card-title text-center mb-4">게시글 작성</h1>
-            <form @submit.prevent="createArticle">
-              <div class="form-group mb-3">
-                <label for="title" class="form-label">제목</label>
-                <input 
-                  type="text" 
-                  id="title" 
-                  v-model.trim="title" 
-                  class="form-control" 
-                  required 
-                  placeholder="제목을 입력하세요" 
-                />
+  <v-container class="mt-5">
+    <v-row justify="center">
+      <v-col cols="12" md="8">
+        <v-card elevation="3">
+          <v-card-text>
+            <h1 class="text-center mb-4" style="color: #3498db;">게시글 작성</h1>
+            <v-form @submit.prevent="createArticle">
+              <!-- 제목 입력 -->
+              <v-text-field
+                v-model.trim="title"
+                label="제목"
+                placeholder="제목을 입력하세요"
+                outlined
+                dense
+                required
+              ></v-text-field>
+
+              <!-- 내용 입력 -->
+              <v-textarea
+                v-model.trim="content"
+                label="내용"
+                placeholder="내용을 입력하세요"
+                rows="5"
+                outlined
+                dense
+                required
+              ></v-textarea>
+
+              <!-- 제출 버튼 -->
+              <div class="d-grid mt-4">
+                <v-btn
+                  color="primary"
+                  large
+                  elevation="2"
+                  type="submit"
+                >
+                  게시글 작성
+                </v-btn>
               </div>
-              <div class="form-group mb-4">
-                <label for="content" class="form-label">내용</label>
-                <textarea 
-                  id="content" 
-                  v-model.trim="content" 
-                  class="form-control" 
-                  rows="5" 
-                  required 
-                  placeholder="내용을 입력하세요"
-                ></textarea>
-              </div>
-              <div class="d-grid">
-                <button type="submit" class="btn btn-primary btn-lg">게시글 작성</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+            </v-form>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script setup>
@@ -79,28 +86,32 @@ const createArticle = function () {
 </script>
 
 <style scoped>
-.card {
-  border: none;
-  border-radius: 15px;
-}
-
-.card-title {
+.text-center {
   color: #3498db;
   font-weight: bold;
 }
 
-.form-control:focus {
-  border-color: #3498db;
-  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+.v-text-field, .v-textarea {
+  margin-bottom: 1.5rem;
 }
 
-.btn-primary {
+.v-btn {
   background-color: #3498db;
-  border-color: #3498db;
+  transition: all 0.3s ease;
 }
 
-.btn-primary:hover {
+.v-btn:hover {
   background-color: #2980b9;
-  border-color: #2980b9;
+}
+
+.v-card {
+  border-radius: 15px;
+  padding: 2rem;
+}
+
+@media (max-width: 768px) {
+  .v-card {
+    padding: 1rem;
+  }
 }
 </style>
