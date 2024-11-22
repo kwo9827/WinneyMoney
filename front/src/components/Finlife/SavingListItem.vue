@@ -34,7 +34,7 @@ const props = defineProps({
 import { useRouter } from 'vue-router';
 const router = useRouter()
 const goToDetail = () => {
-  router.push(`/finlife/detail/${props.saving.id}`)
+  router.push(`/finance/saving/${props.saving.id}`)
 }
 
 

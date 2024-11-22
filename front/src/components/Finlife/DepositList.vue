@@ -60,7 +60,9 @@ import DepositListItem from './DepositListItem.vue'
 const financeStore = useFinanceStore()
 
 // 필터 상태
-const deposits = ref([])
+const deposits = computed(() => {
+  return financeStore.deposits
+})
 const bank = ref('')
 const selectedPeriod = ref(0)
 const periods = [6, 12, 24, 36]

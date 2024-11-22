@@ -2,13 +2,9 @@
   <div>
     <div class="container">
       <!-- 데이터가 없을 때 로딩 메시지 -->
-      <div v-if="!financeStore.savings.length">
-        <p>데이터를 로드 중입니다...</p>
-      </div>
-      <!-- 데이터가 있을 때 -->
-      <div v-else>
-        <!-- 테이블 헤더 -->
-        <div class="table-header">
+      <div v-if="filteredSavings">
+          <!-- 테이블 헤더 -->
+          <div class="table-header">
           <span class="header-item">은행명</span>
           <span class="header-item">상품명</span>
           <span
@@ -39,12 +35,17 @@
           </select>
           <label for="count">검색된 상품 수 : </label>
           <button id="count">{{ filteredSavings.length }}</button>
+          <button @click="resetOrder">정렬 초기화</button> <!-- 원래 순서로 되돌리는 버튼 -->
           <hr />
         </div>
         <!-- SavingListItem 컴포넌트 -->
         <div v-for="saving in filteredSavings" :key="saving.id">
           <SavingListItem :saving="saving" :highlight-period="selectedPeriod" />
         </div>
+      </div>
+      <!-- 데이터가 있을 때 -->
+      <div v-else>
+        <p>데이터를 로드 중입니다...</p>
       </div>
     </div>
   </div>
@@ -56,7 +57,10 @@ import { ref, computed, onMounted } from 'vue';
 import { useFinanceStore } from '@/stores/finance';
 import SavingListItem from './SavingListItem.vue';
 
-// 스토어 및 필터 상태
+// // 스토어 및 필터 상태
+// const savings = computed(() => {
+//   return financeStore.savings
+// })
 const savings = ref([])
 const financeStore = useFinanceStore();
 const bank = ref(''); // 은행명 필터
@@ -68,6 +72,8 @@ onMounted(async () => {
   await financeStore.fetchSavings() // 스토어에서 데이터 로드
   savings.value = [...financeStore.savings] || []// 로컬로 데이터 복사
 })
+
+
 
 // 필터링된 적금 리스트
 const filteredSavings = computed(() => {

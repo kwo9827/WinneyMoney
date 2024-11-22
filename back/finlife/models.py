@@ -40,13 +40,21 @@ class DepositOptions(models.Model):
     intr_rate2 = models.FloatField() #최고우대금리
     save_trm = models.IntegerField() #저축기간
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'fin_prdt_cd', 'intr_rate_type_nm', 'save_trm'],
+                name='unique_deposit_options'
+            )
+        ]
+
     def __str__(self):
-        return f"{self.product.fin_prdt_nm} - {self.save_trm}개월"
+        return f"{self.product.fin_prdt_nm} - {self.save_trm}개월"\
     
 #적금 상품
 class SavingProducts(models.Model):
     dcls_month = models.IntegerField(blank=True) # 공시 제출월 [YYYYMM]
-    fin_prdt_cd = models.TextField(unique=True) # 금융상품 코드
+    fin_prdt_cd = models.TextField() # 금융상품 코드
     kor_co_nm = models.TextField() # 금융회사명
     fin_prdt_nm = models.TextField() #금융상품명
     join_way = models.TextField() # 가입 방법
@@ -79,6 +87,15 @@ class SavingOptions(models.Model):
     intr_rate = models.FloatField() #저축금리
     intr_rate2 = models.FloatField() #최고우대금리
     save_trm = models.IntegerField() #저축기간
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'fin_prdt_cd', 'intr_rate_type_nm', 'save_trm'],
+                name='unique_saving_options'
+            )
+        ]
+
 
     def __str__(self):
         return f"{self.product.fin_prdt_nm} - {self.save_trm}개월"

@@ -75,7 +75,7 @@ const exchange = () => {
 
   // axios 요청
   axios({
-    url: `${store.API_URL}/exchange/${countryCode}/${won.value}/`,
+    url: `${store.API_URL}/info/${countryCode}/${won.value}/`,
     method: 'GET',
   })
     .then((res) => {

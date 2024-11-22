@@ -1,13 +1,17 @@
 <template>
-  <div class="container">
+  <div class="container" v-if="deposit.kor_co_nm">
     <h1>{{ deposit.kor_co_nm }} - {{ deposit.fin_prdt_nm }}</h1>
     <p>기간별 금리:</p>
     <ul>
+      {{ deposit.options.length }}
       <li v-for="option in deposit.options" :key="option.save_trm">
         {{ option.save_trm }}개월: {{ option.intr_rate }}%
       </li>
     </ul>
     <router-link :to="{name: 'DepositView' }">목록으로 돌아가기</router-link>
+  </div>
+  <div v-else>
+    <p>데이터를 불러오는 중입니다...</p>
   </div>
 </template>
 
