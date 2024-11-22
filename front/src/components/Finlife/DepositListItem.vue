@@ -25,7 +25,10 @@
 <script setup>
 const props = defineProps({
   deposit: Object, // 단일 예금 데이터
-  highlightPeriod: Number, // 강조할 기간
+  highlightPeriod: {
+    type: Number, // 강조할 기간
+    default: 0,
+  },
 });
 
 import { useRouter } from 'vue-router';

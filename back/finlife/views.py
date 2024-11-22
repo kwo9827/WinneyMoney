@@ -230,7 +230,6 @@ def deposit_products(request):
 def deposit_detail(request, product_id):
     print('호출')
     deposit = DepositProducts.objects.get(id=product_id)
-    print(product_id, deposit)
     serializer = DepositProductsSerializer(deposit)
     return Response(serializer.data)
 
@@ -248,8 +247,8 @@ def deposit_product_options(request, fin_prdt_cd):
 @api_view(['GET', 'POST'])
 def saving_products(request):
     if request.method == 'GET' :
-        deposits = SavingProducts.objects.all()
-        serializer = SavingProductsSerializer(deposits, many=True)
+        savings = SavingProducts.objects.all()
+        serializer = SavingProductsSerializer(savings, many=True)
         return Response(serializer.data)
     
     elif request.method == 'POST' :
