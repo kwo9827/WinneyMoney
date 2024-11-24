@@ -35,6 +35,7 @@ import SavingDetailView from '@/views/finance/saving/SavingDetailView.vue'
 // portfolio 기능
 import PortfolioDetailView from '@/views/portfolios/PortfolioDetailView.vue'
 import PortfolioCreateView from '@/views/portfolios/PortfolioCreateView.vue'
+import RecommendationView from '@/views/portfolios/RecommendationView.vue'
 
 import { useAccountStore } from '@/stores/accounts'
 
@@ -186,6 +187,12 @@ const router = createRouter({
       name: 'PortfolioCreateView',
       component: PortfolioCreateView
     },
+    //추천 상품
+    {
+      path: '/recommendation',
+      name: 'RecommendationView',
+      component: RecommendationView
+    }
   ],
 })
 

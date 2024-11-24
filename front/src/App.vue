@@ -6,47 +6,12 @@
         <RouterLink :to="{ name: 'HomeView' }" class="logo">
           <span class="logo-text">WinneyMoney</span>
         </RouterLink>
-<<<<<<< HEAD
-      </div>
-      <div class="nav-left">
-        <RouterLink :to="{ name: 'FinanceView' }" class="nav-item">예/적금 상품목록</RouterLink>
-        <RouterLink :to="{ name: 'PortfolioCreateView' }" class="nav-item">포트폴리오 생성</RouterLink>
-        <RouterLink :to="{ name: 'ArticleView' }" class="nav-item">유저 게시판</RouterLink>
-        <RouterLink :to="{ name: 'NewsHomeView' }" class="nav-item">뉴스</RouterLink>
-        <RouterLink :to="{ name: 'ExchangeView' }" class="nav-item">환전 하기</RouterLink>
-        <RouterLink :to="{ name: 'MapView' }" class="nav-item">지도 보기</RouterLink>
-      </div>
-      <div class="nav-right">
-        <template v-if="store.isLogin">
-          <div class="profile-container" @click="toggleDropdown">
-            <!-- 프로필 이미지 -->
-            <img class="profile-img" src="https://via.placeholder.com/40" alt="프로필 이미지" />
-            <span class="username">{{ store.username }}</span>
-            <!-- 드롭 다운 메뉴 -->
-            <div v-if="dropdownVisible" class="dropdown-menu">
-              <RouterLink :to="{ name: 'ProfileView' }">내 프로필</RouterLink>
-              <RouterLink :to="{ name: 'EditProfileView' }">회원정보 변경</RouterLink>
-              <a href="#" @click.prevent="logOut">로그아웃</a>
-              <a href="#" @click.prevent="confirmDeleteAccount">회원탈퇴</a>
-            </div>
-          </div>
-        </template>
-        <template v-else>
-          <RouterLink :to="{ name: 'LogInView' }" class="auth-link">로그인</RouterLink>
-          <RouterLink :to="{ name: 'SignUpView' }" class="auth-link">회원가입</RouterLink>
-        </template>
-      </div>
-    </nav>
-  </header>
-  <main>
-    <RouterView />
-  </main>
-=======
 
         <!-- 왼쪽 네비게이션 -->
         <v-row class="nav-left">
           <v-btn text :to="{ name: 'FinanceView' }">예/적금 상품목록</v-btn>
           <v-btn text :to="{ name: 'ArticleView' }">유저 게시판</v-btn>
+          <v-btn text :to="{ name: 'PortfolioCreateView' }">포트폴리오 만들기</v-btn>
           <v-btn text :to="{ name: 'NewsHomeView' }">뉴스</v-btn>
           <v-btn text :to="{ name: 'ExchangeView' }">환전 하기</v-btn>
           <v-btn text :to="{ name: 'MapView' }">지도 보기</v-btn>
@@ -90,7 +55,6 @@
       <RouterView />
     </v-main>
   </v-app>
->>>>>>> 49a65e57698ee39bd963daff82bd4284ff1195dc
 </template>
 
 <script setup>

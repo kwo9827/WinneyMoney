@@ -1,19 +1,11 @@
 <template>
   <div>
     <div class="container">
-<<<<<<< HEAD
-      <!-- 데이터 로딩 메시지 -->
-      <div v-if="loading">
-        <p>데이터를 로드 중입니다...</p>
-      </div>
-      <!-- 데이터가 로드된 후 -->
-=======
       <!-- 데이터가 없을 때 로딩 메시지 -->
       <div v-if="!financeStore.savings.length">
         <p>데이터를 로드 중입니다...</p>
       </div>
       <!-- 데이터가 있을 때 -->
->>>>>>> 49a65e57698ee39bd963daff82bd4284ff1195dc
       <div v-else>
         <!-- 테이블 헤더 -->
         <div class="table-header">
@@ -63,38 +55,17 @@ import { ref, computed, onMounted } from 'vue';
 import { useFinanceStore } from '@/stores/finance';
 import SavingListItem from './SavingListItem.vue';
 
-<<<<<<< HEAD
-// 로컬 상태 및 스토어
-const loading = ref(true); // 로딩 상태
-const savings = ref([]);
-const initialSavings = ref([]);
-=======
 // 스토어 및 필터 상태
 const savings = ref([])
->>>>>>> 49a65e57698ee39bd963daff82bd4284ff1195dc
 const financeStore = useFinanceStore();
 const bank = ref('');
 const selectedPeriod = ref('');
 const periods = [6, 12, 24, 36]; // 개월 수 정의
 
 onMounted(async () => {
-<<<<<<< HEAD
-  loading.value = true; // 로딩 시작
-  await financeStore.fetchSavings(); // 스토어에서 데이터 로드
-  savings.value = [...financeStore.savings] || []; // 로컬로 데이터 복사
-  initialSavings.value = [...financeStore.savings] || []; // 초기값 저장
-  loading.value = false; // 로딩 종료
-});
-
-// 정렬 초기화
-const resetOrder = () => {
-  savings.value = [...initialSavings.value]; // 초기 데이터로 복원
-};
-=======
   await financeStore.fetchSavings() // 스토어에서 데이터 로드
   savings.value = [...financeStore.savings] || []// 로컬로 데이터 복사
 })
->>>>>>> 49a65e57698ee39bd963daff82bd4284ff1195dc
 
 // 필터링된 적금 리스트
 const filteredSavings = computed(() => {
