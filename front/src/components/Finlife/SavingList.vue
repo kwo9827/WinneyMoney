@@ -24,11 +24,11 @@
         <!-- 필터 입력 -->
         <div class="filters">
           <label for="bank">은행명</label>
-          <input 
-            type="text" 
-            id="bank" 
-            v-model="bank" 
-            placeholder="은행명을 입력하세요" 
+          <input
+            type="text"
+            id="bank"
+            v-model="bank"
+            placeholder="은행명을 입력하세요"
           />
           <label for="period">기간</label>
           <select id="period" v-model="selectedPeriod">

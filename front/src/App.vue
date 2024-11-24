@@ -11,6 +11,7 @@
         <v-row class="nav-left">
           <v-btn text :to="{ name: 'FinanceView' }">예/적금 상품목록</v-btn>
           <v-btn text :to="{ name: 'ArticleView' }">유저 게시판</v-btn>
+          <v-btn text :to="{ name: 'PortfolioCreateView' }">포트폴리오 만들기</v-btn>
           <v-btn text :to="{ name: 'NewsHomeView' }">뉴스</v-btn>
           <v-btn text :to="{ name: 'ExchangeView' }">환전 하기</v-btn>
           <v-btn text :to="{ name: 'MapView' }">지도 보기</v-btn>

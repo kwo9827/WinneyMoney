@@ -36,9 +36,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useFinanceStore } from '@/stores/finance'
-import DepositListItem from './DepositListItem.vue'
+import { ref, computed, onMounted } from 'vue';
+import { useFinanceStore } from '@/stores/finance';
+import DepositListItem from './DepositListItem.vue';
 
 // 스토어 사용
 const financeStore = useFinanceStore()
