@@ -22,6 +22,7 @@ environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
 DEPOSIT_API_KEY = env('DEPOSIT_API_KEY')  # .env 파일에 작성된 API_KEY 값을 API_KEY 변수에 대입
 CURRENCY_API_KEY = env('CURRENCY_API_KEY')
 
+# 네이버 아이디 키 
 NAVER_CLIENT_ID = config('NAVER_CLIENT_ID')
 NAVER_CLIENT_SECRET = config('NAVER_CLIENT_SECRET')
 
@@ -186,5 +187,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
 
-# 이메일 인증 건너뛰기
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# # 이메일 설정
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'  # Gmail 사용 예시
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your_email@gmail.com'  # 발신 이메일 주소
+# EMAIL_HOST_PASSWORD = 'your_email_password'  # 이메일 비밀번호 또는 앱 비밀번호
+

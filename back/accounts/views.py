@@ -1,5 +1,11 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
+from django.conf import settings
+
 from .serializers import UserSerializer, ProfileSerializer, PasswordChangeSerializer
 from finlife.models import DepositProducts
 
@@ -10,6 +16,16 @@ from rest_framework import status
 
 User = get_user_model()
 
+# 회원가입
+@api_view(['POST'])
+def register_user(request):
+    serializer = UserCreateSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()  # 새로운 사용자 생성
+        return Response({'message': '회원가입이 성공적으로 완료되었습니다.', 'username': user.username}, status=status.HTTP_201_CREATED)
+    return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+# 회원 상세 정보
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_detail(request, username):
@@ -89,3 +105,49 @@ def user_favorites(request):
     user = request.user
     serializer = ProfileSerializer(user, request=request)
     return Response(serializer.data['favorite_products'], status=status.HTTP_200_OK)
+
+# # 비밀번호 재설정 요청
+# @api_view(['POST'])
+# def password_reset_request(request):
+#     email = request.data.get('email')
+#     if not email:
+#         return Response({'message': '이메일을 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+#     user = User.objects.filter(email=email).first()
+#     if not user:
+#         return Response({'message': '해당 이메일을 사용하는 사용자가 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+#     token_generator = PasswordResetTokenGenerator()
+#     token = token_generator.make_token(user)
+#     uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+#     reset_url = f"{settings.FRONTEND_URL}/password-reset-confirm/{uidb64}/{token}/"
+    
+#     # 이메일 발송
+#     send_mail(
+#         subject="비밀번호 재설정 요청",
+#         message=f"아래 링크를 클릭하여 비밀번호를 재설정하세요:\n{reset_url}",
+#         from_email=settings.DEFAULT_FROM_EMAIL,
+#         recipient_list=[email],
+#     )
+#     return Response({'message': '비밀번호 재설정 이메일이 발송되었습니다.'}, status=status.HTTP_200_OK)
+
+# # 비밀번호 재설정 확인
+# @api_view(['POST'])
+# def password_reset_confirm(request, uidb64, token):
+#     try:
+#         uid = force_str(urlsafe_base64_decode(uidb64))
+#         user = User.objects.get(pk=uid)
+#     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+#         return Response({'message': '유효하지 않은 요청입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+#     token_generator = PasswordResetTokenGenerator()
+#     if not token_generator.check_token(user, token):
+#         return Response({'message': '유효하지 않은 또는 만료된 토큰입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+#     new_password = request.data.get('new_password')
+#     if not new_password:
+#         return Response({'message': '새 비밀번호를 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+#     user.set_password(new_password)
+#     user.save()
+#     return Response({'message': '비밀번호가 성공적으로 변경되었습니다.'}, status=status.HTTP_200_OK)

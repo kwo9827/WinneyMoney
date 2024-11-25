@@ -1,116 +1,259 @@
 <template>
-  <div class="inputarea">
-    <MapInputDropdown @sendMapKeyword="getKeyword" />
+  <div class="map-container">
+    <!-- 검색 및 드롭다운 -->
+    <!-- <div class="search-bar">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="은행 이름이나 주소를 검색하세요"
+        v-model="searchKeyword"
+        @keypress.enter="searchByKeyword"
+      />
+      <button class="search-button" @click="searchByKeyword">검색</button>
+    </div> -->
+    <div class="dropdowns">
+      <!-- 특별시/광역시/도 선택 -->
+      <select class="select" v-model="selectedProvince">
+        <option value="" disabled selected hidden>특별시/광역시/도를 선택하세요</option>
+        <option v-for="province in provinces" :key="province" :value="province">
+          {{ province }}
+        </option>
+      </select>
+      <!-- 구/군 선택 -->
+      <select class="select" v-model="selectedDistrict" :disabled="!selectedProvince">
+        <option value="" disabled selected hidden>구/군을 선택하세요</option>
+        <option v-for="district in districts" :key="district" :value="district">
+          {{ district }}
+        </option>
+      </select>
+      <!-- 동 선택 -->
+      <select class="select" v-model="selectedDong" :disabled="!selectedDistrict">
+        <option value="" disabled selected hidden>동을 선택하세요</option>
+        <option v-for="dong in dongs" :key="dong" :value="dong">
+          {{ dong }}
+        </option>
+      </select>
+      <!-- 은행 선택 -->
+      <select class="select" v-model="selectedBank">
+        <option value="" disabled selected hidden>은행을 선택하세요</option>
+        <option v-for="bank in banks" :key="bank">{{ bank }}</option>
+      </select>
+      <button class="search-button" @click="searchByDropdown">검색</button>
+    </div>
+    <!-- 지도 -->
     <div id="map"></div>
   </div>
 </template>
 
 <script setup>
-import MapInputDropdown from "./MapInputDropdown.vue";
-import { ref, onMounted } from "vue";
+import { ref, watch, onMounted } from "vue";
+import Swal from "sweetalert2";
 
-const keyword = ref("대전 삼성화재유성캠퍼스");
+// SweetAlert2 설정
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
+});
 
-onMounted(() => createmap());
+// 지도 상태 관리
+let map, ps, infowindow;
 
-const getKeyword = function (arg) {
-  console.log(arg)
-  keyword.value = arg;
-  createmap();
-};
+// 데이터
+import { useMapStore } from "@/stores/map";
+const mapStore = useMapStore();
+const koreaData = mapStore.koreaData;
 
-let map;
-let ps;
-let infowindow;
+// 상태 관리
+const searchKeyword = ref("");
+const provinces = Object.keys(koreaData);
+const selectedProvince = ref("");
+const selectedDistrict = ref("");
+const selectedDong = ref("");
+const selectedBank = ref("");
+const districts = ref([]);
+const dongs = ref([]);
+const banks = [
+  "KEB하나은행",
+  "SC제일은행",
+  "국민은행",
+  "신한은행",
+  "외환은행",
+  "우리은행",
+  "한국시티은행",
+  "지방은행",
+  "경남은행",
+  "광주은행",
+  "대구은행",
+  "부산은행",
+  "전북은행",
+  "제주은행",
+  "기업은행",
+  "농협",
+  "수협",
+  "한국산업은행",
+  "한국수출입은행",
+];
 
-const createmap = () => {
-  // 마커를 클릭하면 장소명을 표출할 인포윈도우
-  infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
-
-  const mapContainer = document.getElementById("map"); // 지도를 표시할 div
+// 지도 초기화
+onMounted(() => {
+  const mapContainer = document.getElementById("map");
   const mapOption = {
-    center: new kakao.maps.LatLng(37.566826, 126.9786567), // 초기 지도 중심좌표
-    level: 10, // 초기 확대 레벨
+    center: new kakao.maps.LatLng(37.566826, 126.9786567), // 초기 중심 좌표 (서울)
+    level: 8, // 초기 확대 레벨
   };
+  map = new kakao.maps.Map(mapContainer, mapOption); // 지도 생성
+  ps = new kakao.maps.services.Places(); // 장소 검색 객체 생성
+  infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
+});
 
-  // 지도를 생성합니다
-  map = new kakao.maps.Map(mapContainer, mapOption);
+// `watch`로 선택 변경 감지
+watch(selectedProvince, (newProvince) => {
+  if (newProvince) {
+    districts.value = Object.keys(koreaData[newProvince] || {});
+    selectedDistrict.value = "";
+    selectedDong.value = "";
+    dongs.value = [];
+  }
+});
 
-  // 장소 검색 객체를 생성합니다
-  ps = new kakao.maps.services.Places();
+watch(selectedDistrict, (newDistrict) => {
+  if (newDistrict) {
+    dongs.value = koreaData[selectedProvince.value]?.[newDistrict] || [];
+    selectedDong.value = "";
+  }
+});
 
-  // 키워드로 장소를 검색합니다
-  ps.keywordSearch(keyword.value, placesSearchCB);
+// 키워드로 검색
+const searchByKeyword = () => {
+  if (!searchKeyword.value.trim()) {
+    Toast.fire({
+      icon: "warning",
+      title: "검색 키워드를 입력해주세요!",
+    });
+    return;
+  }
+  ps.keywordSearch(searchKeyword.value, placesSearchCB);
 };
 
-// 키워드 검색 완료 시 호출되는 콜백 함수
-function placesSearchCB(data, status, pagination) {
-  if (status === kakao.maps.services.Status.OK) {
-    // 검색된 장소 위치를 기준으로 지도 범위를 재설정하기 위해 LatLngBounds 객체 생성
-    const bounds = new kakao.maps.LatLngBounds();
-
-    for (let i = 0; i < data.length; i++) {
-      displayMarker(data[i]);
-      bounds.extend(new kakao.maps.LatLng(data[i].y, data[i].x));
-    }
-
-    // 검색된 첫 번째 장소를 지도 중심으로 설정
-    if (data.length > 0) {
-      const firstPlace = data[0];
-      map.setCenter(new kakao.maps.LatLng(firstPlace.y, firstPlace.x));
-    }
-
-    // 검색된 장소 위치를 기준으로 지도 범위를 재설정
-    map.setBounds(bounds);
-  } else {
-    console.error("검색 결과가 없습니다.");
-    alert('검색 결과가 없습니다.')
+// 드롭다운 선택으로 검색
+const searchByDropdown = () => {
+  if (!selectedProvince.value || !selectedDistrict.value || !selectedDong.value || !selectedBank.value) {
+    Toast.fire({
+      icon: "warning",
+      title: "모든 항목을 선택해주세요!",
+    });
+    return;
   }
-}
+  const keyword = `${selectedProvince.value} ${selectedDistrict.value} ${selectedDong.value} ${selectedBank.value}`;
+  ps.keywordSearch(keyword, placesSearchCB);
+};
 
-// 지도에 마커를 표시하는 함수
-function displayMarker(place) {
-  // 마커를 생성하고 지도에 표시
+// 장소 검색 콜백
+const placesSearchCB = (data, status, pagination) => {
+  if (status === kakao.maps.services.Status.OK) {
+    // 검색된 장소가 있으면 지도에 표시
+    const bounds = new kakao.maps.LatLngBounds();
+    data.forEach((place) => {
+      displayMarker(place);
+      bounds.extend(new kakao.maps.LatLng(place.y, place.x));
+    });
+    map.setBounds(bounds); // 검색된 장소로 지도 범위 조정
+  } else {
+    Toast.fire({
+      icon: "error",
+      title: "검색 결과가 없습니다!",
+    });
+  }
+};
+
+// 마커 표시
+const displayMarker = (place) => {
   const marker = new kakao.maps.Marker({
-    map: map,
+    map,
     position: new kakao.maps.LatLng(place.y, place.x),
   });
-
-  // 마커에 클릭 이벤트를 등록
-  kakao.maps.event.addListener(marker, "click", function () {
-    // 마커 클릭 시 인포윈도우에 장소명을 표시
-    infowindow.setContent(
-      `<div style="padding:5px;font-size:12px;">${place.place_name}</div>`
-    );
+  kakao.maps.event.addListener(marker, "click", () => {
+    infowindow.setContent(`<div style="padding:5px;font-size:12px;">${place.place_name}</div>`);
     infowindow.open(map, marker);
   });
-}
+};
 </script>
 
 <style scoped>
-.inputarea {
-  width: 75%;
-  height: 90%;
+.map-container {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+}
+
+.search-bar {
+  position: absolute;
+  top: 20px;
+  left: 20px;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: white;
-  box-shadow: 5px 5px 10px 5px lightgray;
-  border-radius: 20px;
+  gap: 10px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.label {
-  color: #1c5f82;
-  font-weight: 700;
-  font-size: 1.5rem;
+.search-input {
+  width: 300px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
 }
 
-input {
-  margin-bottom: 10px;
+.search-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.search-button:hover {
+  background-color: #2980b9;
+}
+
+.dropdowns {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: #ffffff;
 }
 
 #map {
-  width: 500px;
-  height: 400px;
+  width: 100%;
+  height: 100%;
 }
 </style>

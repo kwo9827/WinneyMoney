@@ -25,7 +25,7 @@ import NewsHomeView from '@/views/etc/NewsHomeView.vue'
 import NotFoundView from '@/views/etc/NotFoundView.vue'
 
 // finance 기능
-import CartView from '@/views/finance/CartView.vue'
+import Favorites from '@/views/finance/FavoritesView.vue'
 import FinanceView from '@/views/finance/FinanceView.vue'
 import DepositView from '@/views/finance/deposit/DepositView.vue'
 import DepositDetailView from '@/views/finance/deposit/DepositDetailView.vue'
@@ -135,9 +135,9 @@ const router = createRouter({
     },
     // 장바구니
     {
-      path: '/cart',
-      name: 'CartView',
-      component: CartView,
+      path: '/favorites',
+      name: 'FavoritesView',
+      component: Favorites,
     },
     //예/적금 조회
     {

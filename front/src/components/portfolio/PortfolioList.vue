@@ -4,9 +4,9 @@
       <div class="col-md-6">
         <div class="card shadow">
           <div class="card-body">
-            <h2 class="card-title text-center mb-4">내 포트폴리오</h2>
+            <h2 class="card-title text-center mb-4">내 포트폴리오</h2> -->
             <!-- 포트폴리오 데이터 표시 -->
-            <ul v-if="portfolios.length" class="list-group">
+            <!-- <ul v-if="portfolios.length" class="list-group">
               <li
                 v-for="portfolio in portfolios"
                 :key="portfolio.id"
@@ -15,9 +15,9 @@
                 <strong>{{ portfolio.name }}</strong>
                 <span>{{ portfolio.total_investment }}원</span>
               </li>
-            </ul>
+            </ul> -->
             <!-- 포트폴리오가 없을 경우 -->
-            <p v-else class="text-center text-muted">포트폴리오가 없습니다.</p>
+            <!-- <p v-else class="text-center text-muted">포트폴리오가 없습니다.</p>
           </div>
         </div>
       </div>
@@ -66,4 +66,4 @@ onMounted(() => {
 .list-group-item:hover {
   background-color: #f8f9fa;
 }
-</style> -->
+</style>  -->
