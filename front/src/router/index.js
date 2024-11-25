@@ -33,7 +33,6 @@ import SavingView from '@/views/finance/saving/SavingView.vue'
 import SavingDetailView from '@/views/finance/saving/SavingDetailView.vue'
 
 // portfolio 기능
-import PortfolioDetailView from '@/views/portfolios/PortfolioDetailView.vue'
 import PortfolioCreateView from '@/views/portfolios/PortfolioCreateView.vue'
 import RecommendationView from '@/views/portfolios/RecommendationView.vue'
 
@@ -189,7 +188,7 @@ const router = createRouter({
     },
     //추천 상품
     {
-      path: '/recommendation',
+      path: '/recommendation/:portfolioId',
       name: 'RecommendationView',
       component: RecommendationView
     }

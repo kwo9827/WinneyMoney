@@ -50,7 +50,6 @@
         <!-- 암호화폐 추가 버튼 -->
         <v-btn @click="addCrypto" color="primary" class="mt-4">암호화폐 추가</v-btn>
        
-       {{ cryptos }}
         <!-- 추가된 암호화폐 리스트 -->
         <v-alert v-if="cryptos.length" type="info" class="mt-4">
           <v-row dense>

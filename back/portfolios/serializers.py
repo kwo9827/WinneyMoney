@@ -1,6 +1,26 @@
 from rest_framework import serializers
 from .models import Portfolio, Stock, Crypto, UserResponse, RecommendationLog
+from finlife.models import DepositProducts, SavingProducts
 
+# 추천 로그 Serializer
+class RecommendationLogSerializer(serializers.ModelSerializer):
+    product_name = serializers.SerializerMethodField()
+    product_type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RecommendationLog
+        fields = ['product_name', 'product_type', 'reason', 'created_at']
+
+    def get_product_type(self, obj):
+        if isinstance(obj.product, DepositProducts):
+            return "Deposit"
+        elif isinstance(obj.product, SavingProducts):
+            return "Saving"
+        return "Unknown"
+
+    def get_product_name(self, obj):
+        return obj.product.fin_prdt_nm if obj.product else "Unknown"
+    
 # 주식 Serializer
 class StockSerializer(serializers.ModelSerializer):
     quantity = serializers.DecimalField(
@@ -22,12 +42,8 @@ class StockSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        stock = Stock.objects.create(**validated_data)
-        # 변동성 계산 후 저장 (뷰에서 추가 처리 가능)
-        stock.volatility = self.context.get('volatility', None)
-        stock.save()
-        return stock
-
+        validated_data['volatility'] = self.context.get('volatility')
+        return super().create(validated_data)
 
 # 암호화폐 Serializer
 class CryptoSerializer(serializers.ModelSerializer):
@@ -51,15 +67,13 @@ class CryptoSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        crypto = Crypto.objects.create(**validated_data)
-        # 변동성 계산 후 저장 (뷰에서 추가 처리 가능)
-        crypto.volatility = self.context.get('volatility', None)
-        crypto.save()
-        return crypto
+        validated_data['volatility'] = self.context.get('volatility')
+        return super().create(validated_data)
 
 
 # 포트폴리오 Serializer
 class PortfolioSerializer(serializers.ModelSerializer):
+    recommendation_logs = RecommendationLogSerializer(many=True, read_only=True)
     stocks = StockSerializer(many=True, read_only=True)  # 포트폴리오 내 주식 목록
     cryptocurrencies = CryptoSerializer(many=True, read_only=True)  # 포트폴리오 내 암호화폐 목록
     total_investment = serializers.DecimalField(
@@ -73,14 +87,16 @@ class PortfolioSerializer(serializers.ModelSerializer):
             'user',
             'name',
             'total_investment',
+            'volatility',
             'predicted_economy',
             'risk_preference',
             'stocks',
             'cryptocurrencies',
+            'recommendation_logs',
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['user', 'created_at', 'updated_at']
+        read_only_fields = ['user', 'created_at', 'updated_at', 'total_investment', 'volatility']
 
 
 # 사용자 응답 Serializer
@@ -90,8 +106,4 @@ class UserResponseSerializer(serializers.ModelSerializer):
         fields = ['id', 'portfolio', 'current_step', 'responses']
 
 
-# 추천 로그 Serializer
-class RecommendationLogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RecommendationLog
-        fields = ['id', 'portfolio', 'product', 'reason', 'created_at']
+

@@ -10,5 +10,5 @@ urlpatterns = [
     path('<int:portfolio_id>/crypto/', views.add_crypto, name='add_crypto'),  # 포트폴리오에 암호화폐 추가
     path('<int:portfolio_id>/crypto/<int:crypto_id>/', views.update_crypto, name='update_crypto'),  # 암호화폐 수정
     path('<int:portfolio_id>/crypto/<int:crypto_id>/delete/', views.delete_crypto, name='delete_crypto'),  # 암호화폐 삭제
-    path('<int:portfolio_id>/recommend/', views.recommend_savings, name='recommend_savings'),  # 포트폴리오에 추천 예/적금 조회
+    path('<int:portfolio_id>/recommend/', views.recommend_products, name='recommend_products'),  # 포트폴리오에 추천 예/적금 조회
 ]

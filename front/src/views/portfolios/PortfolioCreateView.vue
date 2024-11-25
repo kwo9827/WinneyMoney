@@ -1,21 +1,18 @@
 <template>
   <v-container class="container">
-    <!-- 실린더 프로그레스 바 -->
-    <div class="cylinder-progress-container mb-4">
-      <div class="cylinder">
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <circle class="cylinder-bg" cx="50" cy="50" r="45"></circle>
-          <circle
-            class="cylinder-fill"
-            cx="50"
-            cy="50"
-            r="45"
-            :style="fillStyle"
-          ></circle>
-        </svg>
-        <div class="cylinder-label">
-          {{ currentStep + 1 }} / 7 단계
-        </div>
+    <!-- 진행 바 -->
+    <div class="progress-tick-container mb-4">
+      <div class="progress-tick-bar">
+        <div class="progress-tick-fill" :style="progressBarStyle"></div>
+        <div
+          v-for="(tick, index) in totalSteps"
+          :key="index"
+          class="progress-tick"
+          :class="{ active: currentStep >= index }"
+        ></div>
+      </div>
+      <div class="progress-tick-label">
+        {{ currentStep + 1 }} / {{ totalSteps }} 단계
       </div>
     </div>
 
@@ -26,7 +23,7 @@
       elevation="2"
     >
       <v-card-title>
-        <h1 v-if="currentStep < 6">포트폴리오 생성</h1>
+        <h1 v-if="currentStep < totalSteps - 1">포트폴리오 생성</h1>
         <h1 v-else>포트폴리오 생성 완료!</h1>
       </v-card-title>
 
@@ -35,11 +32,11 @@
           {{ errorMessage }}
         </v-alert>
         <Step1 v-if="currentStep === 0" @next="validateAndNext" />
-        <Step2 v-if="currentStep === 1" @next="validateAndNext" />
-        <Step3 v-if="currentStep === 2" @next="validateAndNext" />
-        <Step4 v-if="currentStep === 3" @next="validateAndNext" />
+        <Step2 v-if="currentStep === 1" @next="validateAndNext" @prev="changeStep('prev')" />
+        <Step3 v-if="currentStep === 2" @next="validateAndNext" @prev="changeStep('prev')" />
+        <Step4 v-if="currentStep === 3" @next="validateAndNext" @prev="changeStep('prev')" />
         <Step5 v-if="currentStep === 4" @next="validateAndNext" />
-        <Step6 v-if="currentStep === 5" @submit="submitPortfolio" />
+        <Step6 v-if="currentStep === 5" @submit="submitPortfolio" @prev="changeStep('prev')"/>
         <Step7 v-if="currentStep === 6" />
       </v-card-text>
     </v-card>
@@ -59,58 +56,36 @@ import Step1 from "@/components/portfolio/Step1.vue";
 import Step2 from "@/components/portfolio/Step2.vue";
 import Step3 from "@/components/portfolio/Step3.vue";
 import Step4 from "@/components/portfolio/Step4.vue";
-import Step5 from "@/components/portfolio/Step5.vue"; // 주식 추가
-import Step6 from "@/components/portfolio/Step6.vue"; // 암호화폐 추가
-import Step7 from "@/components/portfolio/Step7.vue"; // 포트폴리오 생성 완료
+import Step5 from "@/components/portfolio/Step5.vue";
+import Step6 from "@/components/portfolio/Step6.vue";
+import Step7 from "@/components/portfolio/Step7.vue";
 
 const currentStep = ref(0);
+const totalSteps = 7; // 총 단계 수
 const portfolioStore = usePortfolioStore();
 const isLoading = ref(false);
 const errorMessage = ref("");
-const isSlidingOut = ref(false); // 슬라이드 아웃 상태
+const isSlidingOut = ref(false);
 
-// 진행 상태 계산
-const progressPercentage = computed(() => ((currentStep.value + 1) / 7) * 100);
+// 진행 바 스타일 계산
+const progressBarStyle = computed(() => ({
+  width: `${((currentStep.value + 1) / totalSteps) * 100}%`,
+}));
 
-const fillStyle = computed(() => {
-  const progress = 283 - (283 * progressPercentage.value) / 100; // Stroke offset 계산
-  return {
-    strokeDashoffset: progress,
-  };
-});
-
-// 각 단계 데이터의 유효성 검사
-const validateStep = () => {
-  switch (currentStep.value) {
-    case 0:
-      return portfolioStore.portfolio.name !== ""; // Step1: 이름 입력 확인
-    case 1:
-      return portfolioStore.portfolio.predictedEconomy !== null; // Step2: 경제 상황 입력 확인
-    case 2:
-      return portfolioStore.portfolio.riskPreference !== null; // Step3: 리스크 선호도 확인
-    case 3:
-      return portfolioStore.portfolio.totalInvestment > 0; // Step4: 투자 금액 확인
-    default:
-      return true; // 주식, 암호화폐 단계는 개별적으로 처리
-  }
-};
-
-// 단계 변경 (슬라이딩 효과 포함)
+// 단계 변경 로직
 const changeStep = (direction) => {
-  if (isLoading.value) return; // 로딩 중에는 이동 방지
+  if (isSlidingOut.value) return;
 
-  isSlidingOut.value = true; // 슬라이드 아웃 시작
+  isSlidingOut.value = true;
+
   setTimeout(() => {
-    isSlidingOut.value = false; // 슬라이드 인 준비
-    if (direction === "next" && validateStep()) {
-      errorMessage.value = "";
+    isSlidingOut.value = false;
+    if (direction === "next" && currentStep.value < totalSteps - 1) {
       currentStep.value++;
     } else if (direction === "prev" && currentStep.value > 0) {
       currentStep.value--;
-    } else {
-      errorMessage.value = "모든 정보를 올바르게 입력해주세요!";
     }
-  }, 500); // 애니메이션 시간과 일치
+  }, 500);
 };
 
 // 다음 단계로 이동
@@ -122,13 +97,9 @@ const validateAndNext = () => {
 const submitPortfolio = async () => {
   try {
     isLoading.value = true;
-    await portfolioStore.createPortfolio();
     alert("포트폴리오 생성 완료!");
     changeStep("next");
-    console.log("현재 단계:", currentStep.value);
-    console.log("포트폴리오 데이터:", portfolioStore.portfolio);
   } catch (error) {
-    console.error("에러 발생:", error.message || error);
     errorMessage.value = "포트폴리오 생성 중 오류가 발생했습니다. 다시 시도해주세요.";
   } finally {
     isLoading.value = false;
@@ -145,51 +116,60 @@ const submitPortfolio = async () => {
   max-width: 600px;
 }
 
-/* 실린더 프로그레스 바 스타일 */
-.cylinder-progress-container {
+/* 눈금 스타일 */
+.progress-tick-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.progress-tick-bar {
+  position: relative;
+  width: 100%;
+  height: px;
+  background-color: #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  display: flex;
   align-items: center;
 }
 
-.cylinder {
-  position: relative;
-  width: 100px;
-  height: 100px;
+.progress-tick-fill {
+  position: absolute;
+  height: 100%;
+  background-color: #007bff;
+  border-radius: 4px;
+  transition: width 0.5s ease;
 }
 
-.cylinder-label {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.progress-tick {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  background-color: #ddd;
+  border: 2px solid white;
+  border-radius: 50%;
+  z-index: 1;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.progress-tick.active {
+  background-color: #007bff;
+}
+
+.progress-tick:not(:first-child) {
+  margin-left: calc(-6px);
+}
+
+.progress-tick-label {
   font-size: 14px;
   font-weight: bold;
   color: #333;
 }
 
-.cylinder svg {
-  transform: rotate(-90deg); /* 위에서 아래로 채워지도록 */
-  width: 100%;
-  height: 100%;
-}
-
-.cylinder-bg {
-  fill: none;
-  stroke: #ddd;
-  stroke-width: 10;
-}
-
-.cylinder-fill {
-  fill: none;
-  stroke: #007bff;
-  stroke-width: 10;
-  stroke-linecap: round;
-  stroke-dasharray: 283; /* 전체 원 둘레 */
-  stroke-dashoffset: 283; /* 기본값 (빈 상태) */
-  transition: stroke-dashoffset 0.6s ease;
-}
-
+/* 카드 스타일 */
 .card {
   padding: 20px;
   width: 100%;
@@ -208,26 +188,5 @@ const submitPortfolio = async () => {
   opacity: 0;
   transform: translateX(-100%);
 }
-
-h1 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
-}
-
-.mb-4 {
-  margin-bottom: 16px;
-}
-
-.v-alert {
-  font-size: 0.9rem;
-}
-
-.v-overlay {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: white;
-}
 </style>
+

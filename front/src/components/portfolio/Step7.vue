@@ -6,12 +6,13 @@
       </v-card-title>
       <v-card-text>
         <p>포트폴리오 이름: <strong>{{ portfolio.name }}</strong></p>
-        <p>총 투자 금액: <strong>{{ formattedInvestment }} ₩</strong></p>
-        <p>경제 전망: <strong>{{ getEconomyLabel(portfolio.predictedEconomy) }}</strong></p>
-        <p>투자 성향: <strong>{{ getRiskLabel(portfolio.riskPreference) }}</strong></p>
+        <p>총 투자 금액: <strong>{{ portfolio.total_investment }} ₩</strong></p>
+        <p>경제 전망: <strong>{{ getEconomyLabel(portfolio.predicted_economy) }}</strong></p>
+        <p>투자 성향: <strong>{{ getRiskLabel(portfolio.risk_preference) }}</strong></p>
         <v-divider class="my-3"></v-divider>
         <p>포트폴리오가 성공적으로 생성되었습니다. 아래 옵션에서 다음 작업을 선택하세요:</p>
-        <v-btn color="primary" @click="goToRecommendations" class="mt-3" block>
+        
+        <v-btn color="primary" @click="goToRecommendations(portfolioId)" class="mt-3" block>
           추천 상품 보기
         </v-btn>
         <v-btn color="secondary" @click="goToProfile" class="mt-3" block>
@@ -29,6 +30,7 @@ import { useRouter } from "vue-router";
 // 포트폴리오 데이터 가져오기
 const portfolioStore = usePortfolioStore();
 const portfolio = portfolioStore.portfolio;
+const portfolioId = portfolioStore.portfolioId
 const router = useRouter();
 
 // 금액 포맷 함수
@@ -56,8 +58,8 @@ const getRiskLabel = (value) => {
 };
 
 // 추천 상품 페이지 이동
-const goToRecommendations = () => {
-  router.push({ name: "RecommendationView" });
+const goToRecommendations = (id) => {
+  router.push({ name: "RecommendationView" , params: { portfolioId: id }});
 };
 
 // 내 포트폴리오 페이지 이동

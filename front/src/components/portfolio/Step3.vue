@@ -11,7 +11,7 @@
             v-for="option in riskOptions"
             :key="option.value"
             class="risk-option"
-            :class="{ 'selected': portfolio.riskPreference === option.value }"
+            :class="{ 'selected': portfolio.risk_preference === option.value }"
             @click="selectOption(option.value)"
           >
             <p class="option-title">{{ option.label }}</p>
@@ -23,15 +23,28 @@
         </v-alert>
       </v-card-text>
 
-      <v-card-actions>
-        <v-btn
-          :disabled="!portfolio.riskPreference"
-          @click="nextStep"
-          color="primary"
-        >
-          다음
-        </v-btn>
+      <v-card-actions class="action-buttons">
+        <!-- 이전 버튼 -->
+        <v-col cols="6">
+          <v-btn color="secondary" block @click="emit('prev')">
+            이전
+          </v-btn>
+        </v-col>
+        <!-- 다음 버튼 -->
+        <v-col cols="6">
+          <v-btn
+            :disabled="!portfolio.risk_preference"
+            @click="nextStep"
+            color="primary"
+            block
+          >
+            다음
+          </v-btn>
+        </v-col>
       </v-card-actions>
+
+
+
     </v-card>
   </v-container>
 </template>
@@ -66,13 +79,13 @@ const riskOptions = [
 
 // 옵션 선택
 const selectOption = (value) => {
-  portfolio.riskPreference = value;
+  portfolio.risk_preference = value;
   error.value = "";
 };
 
 // 다음 단계로 이동
 const nextStep = () => {
-  if (!portfolio.riskPreference) {
+  if (!portfolio.risk_preference) {
     error.value = "위험 성향을 선택해주세요.";
   } else {
     error.value = "";

@@ -60,6 +60,8 @@
                 </v-card-subtitle>
                 <v-card-text>
                   1주당 구매가: {{ parseFloat(stock.purchase_price || 0).toLocaleString() }}원<br />
+                  현재가: {{ stock.current_value }} 
+                  <br>
                   변동성: {{ stock.volatility?.toFixed(2) || "데이터 없음" }}
                 </v-card-text>
                 <v-card-actions>

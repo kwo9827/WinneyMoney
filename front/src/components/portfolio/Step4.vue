@@ -25,15 +25,30 @@
         </v-alert>
       </v-card-text>
 
-      <v-card-actions>
-        <v-btn
-          :disabled="!portfolio.totalInvestment || portfolio.totalInvestment <= 0 || isLoading"
-          @click="submitPortfolio"
-          :color="isLoading ? 'grey' : 'primary'"
-        >
-          {{ isLoading ? '생성 중...' : '포트폴리오 생성' }}
-        </v-btn>
+      <v-card-actions class="action-buttons">
+        <!-- 이전 버튼 -->
+        <v-col cols="6">
+          <v-btn color="secondary" block @click="emit('prev')">
+            이전
+          </v-btn>
+        </v-col>
+        <!-- 다음 버튼 -->
+        <v-col cols="6">
+          <v-btn
+            :disabled="!portfolio.total_investment || portfolio.total_investment <= 0 || isLoading"
+            @click="submitPortfolio"
+            :color="isLoading ? 'grey' : 'primary'"
+            block
+          >
+            {{ isLoading ? '생성 중...' : '포트폴리오 생성' }}
+          </v-btn>
+        </v-col>
       </v-card-actions>
+
+
+
+
+
     </v-card>
   </v-container>
 </template>
@@ -54,7 +69,7 @@ const formattedInvestment = ref("");
 
 // 숫자 입력 초기화
 watch(
-  () => portfolio.totalInvestment,
+  () => portfolio.total_investment,
   (newValue) => {
     formattedInvestment.value = newValue
       ? newValue.toLocaleString()
@@ -74,11 +89,11 @@ const formatInvestment = () => {
     formattedInvestment.value.replace(/[^\d]/g, "")
   );
   if (numericValue > 0) {
-    portfolio.totalInvestment = numericValue;
+    portfolio.total_investment = numericValue;
     formattedInvestment.value = numericValue.toLocaleString();
   } else {
     error.value = "올바른 투자 금액을 입력해주세요.";
-    portfolio.totalInvestment = 0;
+    portfolio.total_investment = 0;
   }
 };
 

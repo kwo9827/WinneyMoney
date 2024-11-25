@@ -1,21 +1,41 @@
 import { defineStore } from "pinia";
 import axios from "axios";
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import { useAccountStore } from "@/stores/accounts";
 
 export const usePortfolioStore = defineStore("portfolio", () => {
   // Portfolio 상태를 reactive로 관리
+  const portfolios = reactive([]); // 모든 사용자 포트폴리오
   const portfolio = reactive({
     name: "",
-    predictedEconomy: null,
-    riskPreference: null,
-    totalInvestment: 0,
+    predicted_economy: null,
+    risk_preference: null,
+    total_investment: 0,
     stocks: [],
     cryptocurrencies: [],
   });
 
-  let portfolioId = null; // 포트폴리오 ID 저장
-  let recommendations = reactive([]); // 추천 상품 저장
+  const portfolioId = ref(null); // 포트폴리오 ID 저장
+  const recommendations = reactive([]); // 추천 상품 저장
+
+  // 사용자 포트폴리오 불러오기
+  const fetchUserPortfolios = async () => {
+    const accountStore = useAccountStore();
+    const token = accountStore.token;
+
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/portfolios/", {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
+      portfolios.splice(0, portfolios.length, ...response.data); // 기존 데이터를 초기화하고 새로운 데이터로 채움
+      console.log(portfolios.value)
+    } catch (error) {
+      console.error("사용자 포트폴리오를 불러오는 중 오류가 발생했습니다:", error);
+      throw new Error(error.response?.data || error.message);
+    }
+  };
 
   // 포트폴리오 생성
   const createPortfolio = async () => {
@@ -32,7 +52,7 @@ export const usePortfolioStore = defineStore("portfolio", () => {
           },
         }
       );
-      portfolioId = response.data.id;
+      portfolioId.value = response.data.id;
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data || error.message);
@@ -50,7 +70,7 @@ export const usePortfolioStore = defineStore("portfolio", () => {
 
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/portfolios/${portfolioId}/stocks/`,
+        `http://127.0.0.1:8000/portfolios/${portfolioId.value}/stocks/`,
         stock,
         {
           headers: {
@@ -77,7 +97,7 @@ const updateStock = async (updatedStock) => {
 
   try {
     const response = await axios.put(
-      `http://127.0.0.1:8000/portfolios/${portfolioId}/stocks/${updatedStock.id}/`,
+      `http://127.0.0.1:8000/portfolios/${portfolioId.value}/stocks/${updatedStock.id}/`,
       updatedStock,
       {
         headers: {
@@ -116,7 +136,7 @@ const updateStock = async (updatedStock) => {
 
     try {
       await axios.delete(
-        `http://127.0.0.1:8000/portfolios/${portfolioId}/stocks/${stockId}/delete/`,
+        `http://127.0.0.1:8000/portfolios/${portfolioId.value}/stocks/${stockId}/delete/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -154,7 +174,7 @@ const updateStock = async (updatedStock) => {
 
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/portfolios/${portfolioId}/crypto/`,
+        `http://127.0.0.1:8000/portfolios/${portfolioId.value}/crypto/`,
         payload,
         {
           headers: {
@@ -181,7 +201,7 @@ const updateStock = async (updatedStock) => {
 
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/portfolios/${portfolioId}/crypto/${updatedCrypto.id}/`,
+        `http://127.0.0.1:8000/portfolios/${portfolioId.value}/crypto/${updatedCrypto.id}/`,
         updatedCrypto,
         {
           headers: {
@@ -220,7 +240,7 @@ const updateStock = async (updatedStock) => {
 
     try {
       await axios.delete(
-        `http://127.0.0.1:8000/portfolios/${portfolioId}/crypto/${cryptoId}/delete/`,
+        `http://127.0.0.1:8000/portfolios/${portfolioId.value}/crypto/${cryptoId}/delete/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -249,7 +269,7 @@ const updateStock = async (updatedStock) => {
 
 
   // 추천 상품 조회
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = async (portfolioId) => {
     const accountStore = useAccountStore();
     const token = accountStore.token;
 
@@ -266,7 +286,9 @@ const updateStock = async (updatedStock) => {
           },
         }
       );
-      recommendations.splice(0, recommendations.length, ...response.data);
+      // (0, recommendations.length, ...response.data);
+      recommendations.value = response.data
+      console.log('추천', response.data)
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data || error.message);
@@ -283,12 +305,13 @@ const updateStock = async (updatedStock) => {
       stocks: [],
       cryptocurrencies: [],
     });
-    portfolioId = null;
+    portfolioId.value = null;
     recommendations.splice(0);
   };
 
   return {
     portfolio,
+    portfolios,
     portfolioId,
     recommendations,
     createPortfolio,
@@ -300,5 +323,6 @@ const updateStock = async (updatedStock) => {
     deleteCrypto,
     fetchRecommendations,
     resetPortfolio,
+    fetchUserPortfolios
   };
 });

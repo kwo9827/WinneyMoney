@@ -6,7 +6,7 @@
       </v-card-title>
       <v-card-text>
         <v-select
-          v-model="portfolio.predictedEconomy"
+          v-model="portfolio.predicted_economy"
           :items="economyOptions"
           item-title="text"
           item-value="value"
@@ -25,15 +25,27 @@
           {{ error }}
         </v-alert>
       </v-card-text>
-      <v-card-actions>
-        <v-btn
-          color="primary"
-          :disabled="!portfolio.predictedEconomy"
-          @click="nextStep"
-        >
-          다음
-        </v-btn>
+
+      <v-card-actions class="action-buttons">
+        <!-- 이전 버튼 -->
+        <v-col cols="6">
+          <v-btn color="secondary" block @click="emit('prev')">
+            이전
+          </v-btn>
+        </v-col>
+        <!-- 다음 버튼 -->
+        <v-col cols="6">
+          <v-btn
+            color="primary"
+            block
+            :disabled="!portfolio.predicted_economy"
+            @click="nextStep"
+          >
+            다음
+          </v-btn>
+        </v-col>
       </v-card-actions>
+
     </v-card>
   </v-container>
 </template>
@@ -54,11 +66,11 @@ const economyOptions = ref([
 ]);
 
 // 이벤트 정의
-const emit = defineEmits(["next"]);
+const emit = defineEmits(["next", "prev"]);
 
 // 다음 단계로 이동
 const nextStep = () => {
-  if (!portfolio.predictedEconomy) {
+  if (!portfolio.predicted_economy) {
     error.value = "경제 전망을 선택해주세요.";
   } else {
     error.value = "";
@@ -66,9 +78,13 @@ const nextStep = () => {
   }
 };
 
+const prevStep = () => {
+  emit("prev");
+};
+
 // 오류 초기화
 const clearError = () => {
-  if (portfolio.predictedEconomy) {
+  if (portfolio.predicted_economy) {
     error.value = "";
   }
 };

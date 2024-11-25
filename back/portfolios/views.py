@@ -1,16 +1,19 @@
 from django.shortcuts import get_object_or_404
+from django.contrib.contenttypes.models import ContentType
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Portfolio, Stock, Crypto
-from finlife.models import DepositProducts
-from .serializers import PortfolioSerializer, StockSerializer, CryptoSerializer
+from finlife.models import DepositProducts, SavingProducts
+from .serializers import PortfolioSerializer, StockSerializer, CryptoSerializer, RecommendationLogSerializer
 from rest_framework.permissions import IsAuthenticated
 import FinanceDataReader as fdr
+import datetime
 
-# 추천 로직 함수
-def recommend_savings_logic(portfolio):
+from .models import RecommendationLog
+def recommend_products_logic(portfolio):
     try:
+        # 포트폴리오 관련 변수 초기화
         predicted_economy = portfolio.predicted_economy
         risk_preference = portfolio.risk_preference
 
@@ -21,30 +24,156 @@ def recommend_savings_logic(portfolio):
         stock_ratio = stock_investment / total_investment if total_investment > 0 else 0
         crypto_ratio = crypto_investment / total_investment if total_investment > 0 else 0
 
-        savings = DepositProducts.objects.all()
-        scored_savings = []
+        # 저장 상품(예금 및 적금) 가져오기
+        deposits = DepositProducts.objects.prefetch_related("options").all()
+        savings = SavingProducts.objects.prefetch_related("options").all()
 
-        for saving in savings:
+        scored_products = []  # 추천 상품 리스트
+
+        # 사용자 친화적인 메시지 작성
+        portfolio_volatility_message = (
+            f"고객님의 포트폴리오 변동성은 {portfolio.volatility or 'N/A'}입니다. "
+            "변동성이 높을수록 수익률 변동이 크며, 공격적인 투자에 적합합니다. "
+            "아래는 고객님의 투자 성향과 경제 예측에 기반한 추천 상품입니다."
+        )
+
+        # 예금 스코어 계산
+        for deposit in deposits:
             score = 0
-            for option in saving.depositoptions_set.all():
+            reasons = []
+
+            # 옵션 데이터가 없는 경우 생략
+            if not deposit.options.exists():
+                continue
+
+            for option in deposit.options.all():
                 score += option.intr_rate * 10
+                reasons.append(f"기본 금리가 {option.intr_rate}%로 높습니다.")
                 if predicted_economy == "growth" and option.save_trm >= 12:
                     score += 10
+                    reasons.append("성장 경제에 적합한 장기 상품입니다.")
                 elif predicted_economy == "recession" and option.save_trm < 12:
                     score += 5
+                    reasons.append("하락 경제에 적합한 단기 상품입니다.")
+
+                # 만기 후 혜택 반영
+                if hasattr(option, "mtrt_int") and option.mtrt_int:
+                    score += option.mtrt_int * 2
+                    reasons.append(f"만기 후 이자율 {option.mtrt_int}%로 추가 혜택이 있습니다.")
+
             if risk_preference == "high" and crypto_ratio > 0.5:
                 score += 10
+                reasons.append("공격적인 투자 성향에 적합합니다.")
             elif risk_preference == "low" and stock_ratio > 0.6:
                 score -= 10
-            scored_savings.append({"saving": saving, "score": score})
+                reasons.append("수비적인 투자 성향에 부적합합니다.")
 
-        scored_savings.sort(key=lambda x: x["score"], reverse=True)
-        recommended_savings = [x["saving"] for x in scored_savings]
-        portfolio.recommended_deposits.set(recommended_savings[:5])
+            scored_products.append({
+                "product": deposit,
+                "score": score,
+                "type": "deposit",
+                "reasons": sorted(set(reasons), key=reasons.index)  # 중복 제거
+            })
+
+        # 적금 스코어 계산
+        for saving in savings:
+            score = 0
+            reasons = []
+
+            # 옵션 데이터가 없는 경우 생략
+            if not saving.options.exists():
+                continue
+
+            for option in saving.options.all():
+                score += option.intr_rate * 10
+                reasons.append(f"기본 금리가 {option.intr_rate}%로 높습니다.")
+                if predicted_economy == "growth" and option.save_trm >= 12:
+                    score += 10
+                    reasons.append("성장 경제에 적합한 장기 상품입니다.")
+                elif predicted_economy == "recession" and option.save_trm < 12:
+                    score += 5
+                    reasons.append("하락 경제에 적합한 단기 상품입니다.")
+
+                # 만기 후 혜택 반영
+                if hasattr(option, "mtrt_int") and option.mtrt_int:
+                    score += option.mtrt_int * 2
+                    reasons.append(f"만기 후 이자율 {option.mtrt_int}%로 추가 혜택이 있습니다.")
+
+            if risk_preference == "high" and crypto_ratio > 0.5:
+                score += 10
+                reasons.append("공격적인 투자 성향에 적합합니다.")
+            elif risk_preference == "low" and stock_ratio > 0.6:
+                score -= 10
+                reasons.append("수비적인 투자 성향에 부적합합니다.")
+
+            scored_products.append({
+                "product": saving,
+                "score": score,
+                "type": "saving",
+                "reasons": sorted(set(reasons), key=reasons.index)  # 중복 제거
+            })
+
+        # 스코어 기준 정렬
+        scored_products.sort(key=lambda x: x["score"], reverse=True)
+
+        # 추천 상품 저장 및 로그 생성
+        for product in scored_products[:5]:  # 상위 5개만 추천
+            content_type = ContentType.objects.get_for_model(product["product"].__class__)
+
+            # 가장 높은 점수의 이유를 강조하여 표시
+            main_reason = product["reasons"][0] if product["reasons"] else "추천 이유가 없습니다."
+
+            # 추천 로그 중복 확인
+            existing_log = RecommendationLog.objects.filter(
+                portfolio=portfolio,
+                content_type=content_type,
+                object_id=product["product"].id
+            ).first()
+
+            recommendation_message = (
+                f"{portfolio_volatility_message}\n\n"
+                f"주요 이유: {main_reason}\n"
+                f"추가 이유:\n" + "\n".join(product["reasons"])
+            )
+
+            if existing_log:
+                # 이미 존재하는 경우, 추천 이유 업데이트
+                existing_log.reason = recommendation_message
+                existing_log.save()
+            else:
+                # 새로운 추천 로그 생성
+                RecommendationLog.objects.create(
+                    portfolio=portfolio,
+                    content_type=content_type,
+                    object_id=product["product"].id,
+                    reason=recommendation_message,
+                )
 
         return PortfolioSerializer(portfolio).data
     except Exception as e:
         return {"error": str(e)}
+
+
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def recommend_products(request, portfolio_id):
+    # 포트폴리오 가져오기
+    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
+    
+    # 추천 로직 실행
+    data = recommend_products_logic(portfolio)
+    
+    # 포트폴리오와 추천 로그 데이터를 분리하여 반환
+    response_data = {
+        "portfolio": PortfolioSerializer(portfolio).data,  # 포트폴리오 데이터
+        "recommendations": RecommendationLogSerializer(
+            portfolio.recommendation_logs.all(), many=True
+        ).data  # 추천 로그 데이터
+    }
+    
+    return Response(response_data)
+
 
 # 포트폴리오 생성 및 목록 조회
 @api_view(['GET', 'POST'])
@@ -57,6 +186,7 @@ def portfolio_list_create(request):
 
     elif request.method == 'POST':
         serializer = PortfolioSerializer(data=request.data)
+        print(request.data)
         if serializer.is_valid():
             portfolio = serializer.save(user=request.user)
             return Response(PortfolioSerializer(portfolio).data, status=status.HTTP_201_CREATED)
@@ -91,9 +221,7 @@ import pandas as pd
 @permission_classes([IsAuthenticated])
 def add_stock(request, portfolio_id):
     portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
-    print(portfolio, '입력', request.data)
     stocks_data = request.data.get("stocks", [])
-    print(stocks_data)
 
     if not stocks_data:
         return Response({"error": "No stock data provided."}, status=status.HTTP_400_BAD_REQUEST)
@@ -117,14 +245,13 @@ def add_stock(request, portfolio_id):
 
             # FinanceDataReader에서 데이터 가져오기
             stock_info = fdr.DataReader(ticker, start_date, purchase_date)
-            print(stock_info)
+
             if stock_info.empty:
                 raise ValueError(f"Ticker '{ticker}' not found or no data available.")
 
             # 현재 가격 및 변동성 계산
             current_price = stock_info.iloc[-1]["Close"]
             weekly_returns = stock_info["Close"].pct_change().dropna()
-            print(weekly_returns)
             volatility = weekly_returns.std() * (126**0.5)  # 연간화된 변동성
 
             # 수량 계산
@@ -159,11 +286,9 @@ def add_stock(request, portfolio_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_crypto(request, portfolio_id):
-    print(request.data)
     portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
-    print(portfolio)
     cryptos_data = request.data.get("cryptos", [])
-    print(cryptos_data)
+
     if not cryptos_data:
         return Response({"error": "No cryptocurrency data provided."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -223,16 +348,8 @@ def add_crypto(request, portfolio_id):
 
     if errors:
         return Response({"added_cryptos": added_cryptos, "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
-    print(added_cryptos)
     return Response({"added_cryptos": added_cryptos}, status=status.HTTP_201_CREATED)
 
-# 추천 로직 호출
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def recommend_savings(request, portfolio_id):
-    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
-    response_data = recommend_savings_logic(portfolio)
-    return Response(response_data)
 
 # 주식 삭제
 @api_view(['DELETE'])
@@ -258,13 +375,8 @@ def delete_crypto(request, portfolio_id, crypto_id):
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_stock(request, portfolio_id, stock_id):
-    print('응답')
     portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
-    print(portfolio)
     stock = get_object_or_404(Stock, id=stock_id, portfolio=portfolio)
-    print(stock)
-
-    print(portfolio, stock)
     serializer = StockSerializer(stock, data=request.data, partial=True)
     if serializer.is_valid():
         stock = serializer.save()
