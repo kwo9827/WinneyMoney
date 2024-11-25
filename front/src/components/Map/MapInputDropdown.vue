@@ -146,19 +146,33 @@ const sendMapKeyword = () => {
 .search-btn {
   margin-top: 10px;
   border: none;
-  border-radius: 5px;
-  background-color: rgb(7, 152, 242);
+  border-radius: 30px; /* 버튼 모서리 둥글게 */
+  background: linear-gradient(90deg, #007aff, #00d4ff); /* 그라데이션 */
   color: white;
+  font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
-  margin-left: 20px;
+  padding: 10px 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease; /* 부드러운 전환 효과 */
 }
 
 .search-btn:hover {
-  background-color: rgb(17, 132, 222);
-  font-weight: 700;
-  color: white;
+  background: linear-gradient(90deg, #0056b3, #009ad4); /* 호버 시 색상 변경 */
+  transform: scale(1.05); /* 살짝 커짐 효과 */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* 호버 시 그림자 강조 */
+}
+
+.search-btn:active {
+  transform: scale(0.95); /* 클릭 시 눌리는 효과 */
+}
+
+.search-btn svg {
+  margin-right: 8px; /* 아이콘과 텍스트 간격 */
+  width: 20px;
+  height: 20px;
 }
 </style>

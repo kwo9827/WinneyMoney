@@ -6,7 +6,7 @@ class User(AbstractUser):
     following = models.ManyToManyField('self', symmetrical=False, related_name='followers')
     favorite_deposits = models.ManyToManyField('finlife.DepositProducts', related_name='favorited_by_users', blank=True)
     favorite_savings = models.ManyToManyField('finlife.SavingProducts', related_name='favorited_by_users', blank=True)
-
+    
     def __str__(self):
         return self.username
 

@@ -1,74 +1,69 @@
 <template>
-  <v-container class="mt-5">
+  <div class="container mt-5">
     <!-- 게시글 상세 -->
-    <v-card elevation="3" class="mb-4">
-      <v-card-text>
+    <div class="card mb-4">
+      <div class="card-body">
         <h1 class="text-center mb-4" style="color: #3498db;">게시글 상세</h1>
 
         <div v-if="article && article.user">
           <!-- 작성자 -->
-          <v-row class="mb-3">
-            <v-col cols="3" class="fw-bold">작성자:</v-col>
-            <v-col cols="9">
-              <RouterLink
+          <div class="row mb-3">
+            <div class="col-3 fw-bold">작성자:</div>
+            <div class="col-9">
+              <router-link
                 :to="{ name: 'OtherUserProfile', params: { username: article.user.username } }"
                 class="author-link"
               >
                 {{ article.user.username }}
-              </RouterLink>
-            </v-col>
-          </v-row>
+              </router-link>
+            </div>
+          </div>
 
           <!-- 제목 -->
-          <v-row class="mb-3">
-            <v-col cols="3" class="fw-bold">제목:</v-col>
-            <v-col cols="9">{{ article.title }}</v-col>
-          </v-row>
+          <div class="row mb-3">
+            <div class="col-3 fw-bold">제목:</div>
+            <div class="col-9">{{ article.title }}</div>
+          </div>
 
           <!-- 내용 -->
-          <v-row class="mb-3">
-            <v-col cols="3" class="fw-bold">내용:</v-col>
-            <v-col cols="9">{{ article.content }}</v-col>
-          </v-row>
+          <div class="row mb-3">
+            <div class="col-3 fw-bold">내용:</div>
+            <div class="col-9">{{ article.content }}</div>
+          </div>
 
           <!-- 좋아요 -->
-          <v-row class="mb-3">
-            <v-col cols="3" class="fw-bold">좋아요:</v-col>
-            <v-col cols="9">
-              <v-btn
-                icon
-                :color="isLikedByUser ? 'pink' : 'grey'"
-                @click="toggleLike"
-              >
-                <template v-if="isLikedByUser">
-                  <v-icon>mdi-heart</v-icon>
-                </template>
-                <template v-else>
-                  <v-icon>mdi-heart-outline</v-icon>
-                </template>
-              </v-btn>
-              <span>{{ article.likes_count }}개</span>
-            </v-col>
-          </v-row>
+          <div class="row mb-3">
+            <div class="col-3 fw-bold">좋아요:</div>
+            <div class="col-9">
+              <button class="like-btn" @click="toggleLike">
+                <span v-if="isLikedByUser" class="like-icon liked">♥</span>
+                <span v-else class="like-icon">♡</span>
+              </button>
+              <span class="like-count">{{ article.likes_count }}개</span>
+            </div>
+          </div>
 
           <!-- 작성일 -->
-          <v-row class="mb-3">
-            <v-col cols="3" class="fw-bold">작성일:</v-col>
-            <v-col cols="9">{{ formatDate(article.created_at) }}</v-col>
-          </v-row>
+          <div class="row mb-3">
+            <div class="col-3 fw-bold">작성일:</div>
+            <div class="col-9">{{ formatDate(article.created_at) }}</div>
+          </div>
         </div>
 
         <!-- 로딩 상태 -->
         <div v-else class="text-center">
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
         </div>
-      </v-card-text>
-    </v-card>
+      </div>
+    </div>
 
     <!-- 댓글 섹션 -->
-    <v-card elevation="3">
-      <v-card-text>
+    <div class="card">
+      <div class="card-body">
         <h5 class="text-primary mb-4">댓글</h5>
+
         <!-- 댓글 목록 -->
         <div v-for="comment in comments" :key="comment.id" class="mb-3">
           <p>
@@ -76,45 +71,41 @@
             <small class="text-muted">({{ formatDate(comment.created_at) }})</small>
           </p>
           <div v-if="isAuthor(comment.user.username)">
-            <v-btn text small @click="editComment(comment)">수정</v-btn>
-            <v-btn text small color="error" @click="deleteComment(comment.id)">삭제</v-btn>
+            <button class="btn btn-link p-0 me-2" @click="editComment(comment)">수정</button>
+            <button class="btn btn-link text-danger p-0" @click="deleteComment(comment.id)">삭제</button>
           </div>
         </div>
 
         <!-- 댓글 작성 -->
-        <v-textarea
+        <textarea
           v-model="newComment"
-          label="댓글을 입력하세요"
+          class="form-control"
+          placeholder="댓글을 입력하세요"
           rows="2"
-          outlined
-          dense
-        ></v-textarea>
-        <v-btn class="mt-2" color="primary" large @click="addComment">
-          댓글 작성
-        </v-btn>
-      </v-card-text>
-    </v-card>
+        ></textarea>
+        <button class="btn btn-primary mt-2" @click="addComment">댓글 작성</button>
+      </div>
+    </div>
 
     <!-- 뒤로가기 및 게시글 수정/삭제 -->
     <div class="mt-4 text-center">
-      <v-btn color="secondary" class="me-2" @click="goBack">뒤로 가기</v-btn>
-      <v-btn
+      <button class="btn btn-secondary me-2" @click="goBack">뒤로 가기</button>
+      <button
         v-if="isArticleAuthor"
-        color="primary"
-        class="me-2"
-        :to="{ name: 'UpdateView', params: { id: article.id } }"
+        class="btn btn-primary me-2"
+        @click="$router.push({ name: 'UpdateView', params: { id: article.id } })"
       >
         수정하기
-      </v-btn>
-      <v-btn
+      </button>
+      <button
         v-if="isArticleAuthor"
-        color="error"
+        class="btn btn-danger"
         @click="deleteArticle"
       >
         삭제하기
-      </v-btn>
+      </button>
     </div>
-  </v-container>
+  </div>
 </template>
 
 <script setup>
@@ -128,23 +119,19 @@ const accountStore = useAccountStore()
 const route = useRoute()
 const router = useRouter()
 
-// 게시글 및 댓글 상태
 const article = ref({})
 const comments = ref([])
 const newComment = ref('')
 const isLikedByUser = ref(false)
 
-// 작성자 여부 확인
 const isArticleAuthor = computed(() => {
   return article.value.user?.username === accountStore.username
 })
 
-// 댓글 작성자 확인
 const isAuthor = (username) => {
   return username === accountStore.username
 }
 
-// 게시글 가져오기
 onMounted(() => {
   const articleId = route.params.id
 
@@ -162,7 +149,6 @@ onMounted(() => {
     })
 })
 
-// 게시글 좋아요 토글
 const toggleLike = () => {
   const articleId = route.params.id
 
@@ -173,12 +159,11 @@ const toggleLike = () => {
       article.value.likes_count += isLikedByUser.value ? 1 : -1
     })
     .catch((err) => {
-      console.error('좋아요 토글 실패:', err)
-      alert('좋아요를 처리하는 데 실패했습니다.')
+      console.error('좋아요 처리 실패:', err)
+      alert('좋아요 처리에 실패했습니다.')
     })
 }
 
-// 게시글 삭제
 const deleteArticle = () => {
   const articleId = route.params.id
 
@@ -194,7 +179,6 @@ const deleteArticle = () => {
     })
 }
 
-// 댓글 작성
 const addComment = () => {
   const articleId = route.params.id
   if (!newComment.value.trim()) {
@@ -216,7 +200,6 @@ const addComment = () => {
     })
 }
 
-// 댓글 삭제
 const deleteComment = (commentId) => {
   const articleId = route.params.id
   communityStore
@@ -233,7 +216,6 @@ const deleteComment = (commentId) => {
     })
 }
 
-// 댓글 수정
 const editComment = (comment) => {
   const updatedContent = prompt('댓글 내용을 수정하세요:', comment.content)
   if (updatedContent) {
@@ -253,13 +235,11 @@ const editComment = (comment) => {
   }
 }
 
-// 날짜 포맷
 const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }
   return new Date(dateString).toLocaleDateString('ko-KR', options)
 }
 
-// 뒤로가기
 const goBack = () => {
   router.push({ name: 'ArticleView' })
 }
@@ -275,5 +255,29 @@ const goBack = () => {
 .author-link:hover {
   text-decoration: underline;
   color: #2980b9;
+}
+
+.like-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  padding: 0;
+}
+
+.like-btn .like-icon {
+  font-size: 2rem;
+  color: grey;
+  transition: color 0.3s ease;
+}
+
+.like-btn .like-icon.liked {
+  color: red;
+}
+
+.like-count {
+  margin-left: 8px;
+  font-size: 1rem;
+  color: #555;
 }
 </style>

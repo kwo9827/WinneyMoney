@@ -1,31 +1,60 @@
 <template>
-  <tr @click="goToDetail" class="data-row">
-    <!-- 은행명 -->
-    <td>{{ saving.kor_co_nm }}</td>
-    <!-- 상품명 -->
-    <td>{{ saving.fin_prdt_nm }}</td>
-    <!-- 각 기간별 금리 -->
-    <td v-for="period in periods" :key="'data-' + period" class="interest-rate">
-      <span v-if="saving.options.find(option => option.save_trm === period)?.intr_rate">
-        {{ saving.options.find(option => option.save_trm === period).intr_rate }}%
-      </span>
-      <span v-else>-</span>
-    </td>
-  </tr>
+  <table class="saving-table">
+    <!-- 테이블 헤더 -->
+    <thead>
+      <tr>
+        <th>은행명</th>
+        <th>상품명</th>
+        <th v-for="period in periods" :key="'header-' + period">
+          {{ period }}개월
+        </th>
+      </tr>
+    </thead>
+    <!-- 테이블 본문 -->
+    <tbody>
+      <tr
+        v-for="saving in savings"
+        :key="saving.id"
+        @click="goToDetail(saving.id)"
+        class="data-row"
+      >
+        <!-- 은행명 -->
+        <td>{{ saving.kor_co_nm }}</td>
+        <!-- 상품명 -->
+        <td>{{ saving.fin_prdt_nm }}</td>
+        <!-- 각 기간별 금리 -->
+        <td
+          v-for="period in periods"
+          :key="'data-' + period"
+          class="interest-rate"
+        >
+          <span
+            v-if="saving.options.find(option => option.save_trm === period)?.intr_rate"
+          >
+            {{
+              saving.options.find(option => option.save_trm === period).intr_rate
+            }}%
+          </span>
+          <span v-else>-</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router';
+
 const props = defineProps({
-  saving: Object, // 적금 데이터
+  savings: Array, // 적금 데이터 배열
   periods: Array, // 기간 배열
 });
 
-import { useRouter } from 'vue-router';
 const router = useRouter();
 
-// 상세보기로 이동
-const goToDetail = () => {
-  router.push({ name: 'SavingDetailView', params: { product_id: props.saving.id } });
+// 상세 페이지로 이동
+const goToDetail = (id) => {
+  router.push({ name: 'SavingDetailView', params: { product_id: id } });
 };
 </script>
 
@@ -57,14 +86,6 @@ const goToDetail = () => {
 .saving-table td {
   background-color: #ffffff;
   color: #34495e;
-}
-
-/* 로딩 메시지 스타일 */
-.loading-message {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #7f8c8d;
-  margin-top: 2rem;
 }
 
 .data-row {

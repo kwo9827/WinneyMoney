@@ -82,6 +82,7 @@ const changeStep = (direction) => {
     isSlidingOut.value = false;
     if (direction === "next" && currentStep.value < totalSteps - 1) {
       currentStep.value++;
+      console.log('더하기 후', currentStep.value)
     } else if (direction === "prev" && currentStep.value > 0) {
       currentStep.value--;
     }

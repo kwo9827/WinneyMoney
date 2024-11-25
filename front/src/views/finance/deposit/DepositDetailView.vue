@@ -26,39 +26,67 @@
         </li>
       </ul>
     </div>
-    <div>
-    <!-- 돌아가기 버튼 -->
-    <router-link :to="{ name: 'DepositView' }" class="back-button">목록으로 돌아가기</router-link>
+    <div class="button-container">
+      <!-- 돌아가기 버튼 -->
+      <router-link :to="{ name: 'DepositView' }" class="back-button">목록으로 돌아가기</router-link>
+
+      <!-- 가입/제거 버튼 -->
+      <button @click="handleJoin" class="join-button">
+        {{ isFavorite ? '가입 해제' : '가입하기' }}
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useAccountStore } from '@/stores/accounts';
+import { useRoute } from 'vue-router';
+import { useFinanceStore } from '@/stores/finance';
 import axios from 'axios';
 
-const store = useAccountStore();
-const deposit = ref({});
+const financeStore = useFinanceStore();
+const deposit = ref({}); // 예금 상품 정보
+const isFavorite = ref(false); // 즐겨찾기 여부 상태
 const route = useRoute();
-const router = useRouter();
-const API_URL = store.API_URL;
 
+// API 요청 URL
+const API_URL = 'http://127.0.0.1:8000/finlife/deposit-products/detail';
+
+// 데이터 가져오기
 onMounted(() => {
   const product_id = route.params.product_id; // URL에서 id 가져오기
-  axios({
-    method: 'get',
-    url: `${API_URL}/finlife/deposit-products/detail/${product_id}/`,
-  })
+  axios
+    .get(`${API_URL}/${product_id}/`) // 상품 상세 정보 API 호출
     .then((res) => {
-      console.log('성공');
-      deposit.value = res.data; // API 응답 데이터 저장
+      console.log('데이터 가져오기 성공:', res.data);
+      deposit.value = res.data; // API 응답 데이터를 deposit에 저장
+      checkFavorite(); // 즐겨찾기 여부 확인
     })
     .catch((err) => {
-      console.error('API 호출 오류:', err);
+      console.error('데이터 가져오기 실패:', err.response || err);
     });
 });
+
+// 즐겨찾기 여부 확인
+const checkFavorite = async () => {
+  await financeStore.fetchFavorites(); // 즐겨찾기 데이터 최신화
+  isFavorite.value = financeStore.favoriteDeposits.some(
+    (item) => item.fin_prdt_cd === deposit.value.fin_prdt_cd
+  );
+  console.log('현재 isFavorite 상태:', isFavorite.value); // 상태 디버깅용
+};
+
+// 가입/제거 버튼 클릭 처리
+const handleJoin = async () => {
+  try {
+    await financeStore.toggleFavoriteDeposit(deposit.value.fin_prdt_cd); // 즐겨찾기 토글
+    isFavorite.value = !isFavorite.value; // 상태 토글
+    alert(isFavorite.value ? '예금 즐겨찾기에 추가되었습니다.' : '예금 즐겨찾기에서 제거되었습니다.');
+  } catch (error) {
+    alert('작업 중 오류가 발생했습니다.');
+    console.error('handleJoin 오류:', error.response?.data || error.message);
+  }
+};
 </script>
 
 <style scoped>
@@ -135,6 +163,12 @@ onMounted(() => {
   font-weight: bold;
 }
 
+/* 버튼 컨테이너 */
+.button-container {
+  display: flex;
+  gap: 1rem;
+}
+
 /* 돌아가기 버튼 스타일 */
 .back-button {
   background-color: #3498db;
@@ -150,5 +184,23 @@ onMounted(() => {
 
 .back-button:hover {
   background-color: #2980b9;
+}
+
+/* 가입하기 버튼 스타일 */
+.join-button {
+  background-color: #27ae60;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.join-button:hover {
+  background-color: #1e8449;
 }
 </style>

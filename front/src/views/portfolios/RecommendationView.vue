@@ -31,6 +31,7 @@
         <v-alert v-if="errorMessage" type="error" dense class="mb-3">
           {{ errorMessage }}
         </v-alert>
+<<<<<<< HEAD
 
         <v-alert v-if="!recommendations.recommendations?.length && !errorMessage" type="info" dense>
           추천 상품이 없습니다. 포트폴리오 데이터를 확인해주세요.
@@ -68,11 +69,38 @@
             </v-card-actions>
           </v-card>
         </div>
+=======
+        <v-alert v-if="!recommendations.length && !errorMessage" type="info" dense>
+          추천 상품이 없습니다. 포트폴리오 데이터를 확인해주세요.
+        </v-alert>
+
+        <v-list dense v-if="recommendations.length">
+          <v-list-item
+            v-for="(item, index) in recommendations"
+            :key="index"
+            class="recommendation-item"
+          >
+            <v-list-item-content>
+              <v-list-item-title>
+                {{ item.fin_prdt_nm }} ({{ item.kor_co_nm }})
+              </v-list-item-title>
+              <v-list-item-subtitle>
+                최고 금리: {{ item.max_rate }}%<br />
+                조건: {{ item.conditions }}
+              </v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+>>>>>>> fad2774c995becbc7bd8dabf608e3ec1f148d905
       </v-card-text>
 
       <!-- 뒤로가기 버튼 -->
       <v-card-actions>
+<<<<<<< HEAD
         <v-btn color="secondary" @click="goBack" block>뒤로 가기</v-btn>
+=======
+        <v-btn color="secondary" @click="goBack">뒤로 가기</v-btn>
+>>>>>>> fad2774c995becbc7bd8dabf608e3ec1f148d905
       </v-card-actions>
     </v-card>
   </v-container>

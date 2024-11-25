@@ -44,8 +44,8 @@
 import { useRouter } from 'vue-router';
 
 const props = defineProps({
-  deposits: Array,
-  periods: Array,
+  deposits: Array, // 현재 페이지의 예금 데이터
+  periods: Array, // 기간 배열
 });
 
 const router = useRouter();

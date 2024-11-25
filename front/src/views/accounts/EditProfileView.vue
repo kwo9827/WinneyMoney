@@ -48,10 +48,10 @@
               <RouterLink :to="{ name: 'ChangePasswordView' }" class="btn-link">
                 비밀번호 변경
               </RouterLink>
-              <span> | </span>
+              <!-- <span> | </span>
               <RouterLink :to="{ name: 'FindPasswordView' }" class="btn-link">
                 비밀번호 찾기
-              </RouterLink>
+              </RouterLink> -->
             </div>
             <!-- 뒤로가기 버튼 -->
             <div class="mt-4 text-center">
