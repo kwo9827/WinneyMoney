@@ -97,14 +97,16 @@ const validateStep = () => {
 
 // 단계 변경 (슬라이딩 효과 포함)
 const changeStep = (direction) => {
-  if (isLoading.value) return; // 로딩 중에는 이동 방지
+  // if (isLoading.value) return; // 로딩 중에는 이동 방지
 
   isSlidingOut.value = true; // 슬라이드 아웃 시작
   setTimeout(() => {
     isSlidingOut.value = false; // 슬라이드 인 준비
     if (direction === "next" && validateStep()) {
+      console.log('더하기 전', currentStep.value)
       errorMessage.value = "";
       currentStep.value++;
+      console.log('더하기 후', currentStep.value)
     } else if (direction === "prev" && currentStep.value > 0) {
       currentStep.value--;
     } else {
