@@ -22,7 +22,7 @@
     <!-- 단계별 카드 -->
     <v-card
       class="card"
-      :class="{ 'slide-in': !isLoading }"
+      :class="{ 'slide-in': !isSlidingOut, 'slide-out': isSlidingOut }"
       elevation="2"
     >
       <v-card-title>
@@ -67,6 +67,7 @@ const currentStep = ref(0);
 const portfolioStore = usePortfolioStore();
 const isLoading = ref(false);
 const errorMessage = ref("");
+const isSlidingOut = ref(false); // 슬라이드 아웃 상태
 
 // 진행 상태 계산
 const progressPercentage = computed(() => ((currentStep.value + 1) / 7) * 100);
@@ -94,15 +95,29 @@ const validateStep = () => {
   }
 };
 
+// 단계 변경 (슬라이딩 효과 포함)
+const changeStep = (direction) => {
+  // if (isLoading.value) return; // 로딩 중에는 이동 방지
+
+  isSlidingOut.value = true; // 슬라이드 아웃 시작
+  setTimeout(() => {
+    isSlidingOut.value = false; // 슬라이드 인 준비
+    if (direction === "next" && validateStep()) {
+      console.log('더하기 전', currentStep.value)
+      errorMessage.value = "";
+      currentStep.value++;
+      console.log('더하기 후', currentStep.value)
+    } else if (direction === "prev" && currentStep.value > 0) {
+      currentStep.value--;
+    } else {
+      errorMessage.value = "모든 정보를 올바르게 입력해주세요!";
+    }
+  }, 500); // 애니메이션 시간과 일치
+};
+
 // 다음 단계로 이동
 const validateAndNext = () => {
-  if (isLoading.value) return; // 로딩 중에는 이동 방지
-  if (validateStep()) {
-    errorMessage.value = "";
-    currentStep.value++;
-  } else {
-    errorMessage.value = "모든 정보를 올바르게 입력해주세요!";
-  }
+  changeStep("next");
 };
 
 // 포트폴리오 제출
@@ -111,10 +126,9 @@ const submitPortfolio = async () => {
     isLoading.value = true;
     await portfolioStore.createPortfolio();
     alert("포트폴리오 생성 완료!");
-    currentStep.value++; // Step7로 이동
+    changeStep("next");
     console.log("현재 단계:", currentStep.value);
     console.log("포트폴리오 데이터:", portfolioStore.portfolio);
-
   } catch (error) {
     console.error("에러 발생:", error.message || error);
     errorMessage.value = "포트폴리오 생성 중 오류가 발생했습니다. 다시 시도해주세요.";
@@ -184,7 +198,7 @@ const submitPortfolio = async () => {
   max-width: 1000px;
   opacity: 0;
   transform: translateX(100%);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .card.slide-in {
