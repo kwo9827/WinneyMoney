@@ -31,10 +31,10 @@
         <canvas id="interestChart"></canvas>
       </div>
     </div>
-
+    
     <div class="button-container">
       <!-- 돌아가기 버튼 -->
-      <router-link :to="{ name: 'DepositView' }" class="back-button">목록으로 돌아가기</router-link>
+      <router-link :to="{ name: 'RecommendationView', params: { portfolioId: route.params.portfolio_id } }" class="back-button">목록으로 돌아가기</router-link>
 
       <!-- 가입/제거 버튼 -->
       <button @click="handleJoin" class="join-button">
@@ -65,10 +65,9 @@ onMounted(() => {
   axios
     .get(`${API_URL}/${product_id}/`) // 상품 상세 정보 API 호출
     .then((res) => {
-      console.log('데이터 가져오기 성공:', res.data);
       deposit.value = res.data; // API 응답 데이터를 deposit에 저장
       checkFavorite(); // 즐겨찾기 여부 확인
-      drawInterestChart(); // 차트 그리기
+      drawInterestChart(); // 금리 차트 그리기
     })
     .catch((err) => {
       console.error('데이터 가져오기 실패:', err.response || err);
@@ -81,16 +80,10 @@ const checkFavorite = async () => {
   isFavorite.value = financeStore.favoriteDeposits.some(
     (item) => item.fin_prdt_cd === deposit.value.fin_prdt_cd
   );
-  console.log('현재 isFavorite 상태:', isFavorite.value); // 상태 디버깅용
 };
 
-// 차트 그리기
+// 금리 차트 그리기
 const drawInterestChart = () => {
-  if (!deposit.value.options || deposit.value.options.length === 0) {
-    console.error("옵션 데이터가 없습니다. 차트를 그릴 수 없습니다.");
-    return;
-  }
-
   const labels = deposit.value.options.map(option => `${option.save_trm}개월`); // x축: 개월수
   const data = deposit.value.options.map(option => option.intr_rate); // y축: 이자율
 

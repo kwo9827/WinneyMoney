@@ -154,7 +154,6 @@ def recommend_products_logic(portfolio):
         return {"error": str(e)}
 
 
-    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_products(request, portfolio_id):

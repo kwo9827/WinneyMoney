@@ -43,16 +43,22 @@
             class="recommendation-item"
             outlined
           >
-            <v-img
-              src="https://via.placeholder.com/300"
-              alt="Product Image"
+            <!-- item.bank_name 확인을 위한 콘솔 출력 -->
+            <div>{{ console.log(item.bank_name) }}</div> <!-- 여기서 콘솔로 item.bank_name 출력 -->
+            <div>{{ console.log(item) }}</div>
+            <!-- 은행 이미지 동적 바인딩 -->
+            <!-- <v-img
+              :src="getBankImage(item.bank_name)"  
+              alt="Bank Logo"
               height="150"
               class="recommendation-image"
-            />
+            /> -->
+            
             <v-card-title class="recommendation-title">
               {{ item.product_name }}
               <span class="product-type">({{ item.product_type }})</span>
             </v-card-title>
+            
             <v-card-text>
               <p class="recommendation-description">추천 이유:</p>
               <ul class="recommendation-reasons">
@@ -61,12 +67,29 @@
                 </li>
               </ul>
             </v-card-text>
+
             <v-card-actions>
-              <v-btn color="primary" block outlined>
+              <v-btn
+                v-if="item.product_type === 'Deposit'" 
+                :to="{ name: 'DepositPortDetailView', params: { product_id: item.product_id, portfolio_id: route.params.portfolioId } }"
+                color="primary"
+                block
+                outlined
+              >
+                자세히 보기
+              </v-btn>
+              <v-btn
+                v-else-if="item.product_type === 'Saving'" 
+                :to="{ name: 'SavingPortDetailView', params: { product_id: item.product_id, portfolio_id: route.params.portfolioId } }"
+                color="primary"
+                block
+                outlined
+              >
                 자세히 보기
               </v-btn>
             </v-card-actions>
           </v-card>
+
         </div>
       </v-card-text>
 
@@ -161,6 +184,19 @@ onMounted(() => {
 const goBack = () => {
   router.push({ name: "ProfileView" });
 };
+
+// 은행 이미지 
+const getBankImage = (bankName) => {
+  const bankImages = import.meta.glob('@/assets/bank-images/*.png');
+
+  // bankName에 해당하는 이미지 경로 찾기
+  const imagePath = `@/assets/bank-images/${bankName}.png`;
+  const image = bankImages[imagePath];
+
+  // 이미지가 없으면 기본 이미지를 반환
+  return image || bankImages['@/assets/bank-images/default.jpg'];
+};
+
 </script>
 
 <style scoped>

@@ -25,7 +25,13 @@
           <span class="rate">{{ option.intr_rate }}% (최대 {{ option.intr_rate2 }}%)</span>
         </li>
       </ul>
+
+      <!-- 차트 -->
+      <div class="chart-container">
+        <canvas id="interestChart"></canvas>
+      </div>
     </div>
+
     <div class="button-container">
       <!-- 돌아가기 버튼 -->
       <router-link :to="{ name: 'SavingView' }" class="back-button">목록으로 돌아가기</router-link>
@@ -43,6 +49,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useFinanceStore } from '@/stores/finance';
 import axios from 'axios';
+import Chart from 'chart.js/auto';
 
 const financeStore = useFinanceStore();
 const saving = ref({}); // 적금 상품 정보
@@ -61,6 +68,7 @@ onMounted(() => {
       console.log('데이터 가져오기 성공:', res.data);
       saving.value = res.data; // API 응답 데이터를 saving에 저장
       checkFavorite(); // 즐겨찾기 여부 확인
+      drawInterestChart(); // 차트 생성
     })
     .catch((err) => {
       console.error('데이터 가져오기 실패:', err.response || err);
@@ -74,6 +82,56 @@ const checkFavorite = async () => {
     (item) => item.fin_prdt_cd === saving.value.fin_prdt_cd
   );
   console.log('현재 isFavorite 상태:', isFavorite.value); // 상태 디버깅용
+};
+
+// 금리 차트 그리기
+const drawInterestChart = () => {
+  const labels = saving.value.options.map(option => `${option.save_trm}개월`); // x축: 개월수
+  const data = saving.value.options.map(option => option.intr_rate); // y축: 이자율
+
+  const ctx = document.getElementById("interestChart").getContext("2d");
+
+  new Chart(ctx, {
+    type: "line", // 라인 차트
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "금리(%)",
+          data: data,
+          borderColor: "#27ae60",
+          backgroundColor: "rgba(39, 174, 96, 0.2)",
+          fill: true,
+          tension: 0.4, // 라인의 곡선 정도
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: "top",
+        },
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: "개월 수",
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: "금리 (%)",
+          },
+          beginAtZero: true, // y축을 0부터 시작
+        },
+      },
+    },
+  });
 };
 
 // 가입/제거 버튼 클릭 처리
@@ -186,7 +244,7 @@ const handleJoin = async () => {
   background-color: #2980b9;
 }
 
-/* 가입/제거 버튼 스타일 */
+/* 가입하기 버튼 스타일 */
 .join-button {
   background-color: #27ae60;
   color: #ffffff;
@@ -202,5 +260,13 @@ const handleJoin = async () => {
 
 .join-button:hover {
   background-color: #1e8449;
+}
+
+/* 차트 컨테이너 */
+.chart-container {
+  width: 100%;
+  max-width: 600px;
+  height: 400px;
+  margin-top: 2rem;
 }
 </style>

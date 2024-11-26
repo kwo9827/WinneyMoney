@@ -4,12 +4,17 @@ from finlife.models import DepositProducts, SavingProducts
 
 # 추천 로그 Serializer
 class RecommendationLogSerializer(serializers.ModelSerializer):
+    product_id = serializers.SerializerMethodField()  # 상품 ID 필드 추가
     product_name = serializers.SerializerMethodField()
     product_type = serializers.SerializerMethodField()
 
     class Meta:
         model = RecommendationLog
-        fields = ['product_name', 'product_type', 'reason', 'created_at']
+        fields = ['product_id', 'product_name', 'product_type', 'reason', 'created_at']
+
+    def get_product_id(self, obj):
+        # object_id는 상품의 기본 키(PK)를 나타냅니다.
+        return obj.object_id
 
     def get_product_type(self, obj):
         if isinstance(obj.product, DepositProducts):
@@ -20,6 +25,7 @@ class RecommendationLogSerializer(serializers.ModelSerializer):
 
     def get_product_name(self, obj):
         return obj.product.fin_prdt_nm if obj.product else "Unknown"
+
     
 # 주식 Serializer
 class StockSerializer(serializers.ModelSerializer):
