@@ -26,6 +26,25 @@ def exchange(request, fromCountry, price):
             break
     return Response({"exchangeresult": exchangeresult})
 
+@api_view(['GET'])
+def exchange_foreign(request, fromCountry, price):
+    # 환율 정보 가져오기
+    API_KEY = settings.CURRENCY_API_KEY
+    URL = f'https://www.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey={API_KEY}&data=AP01'
+    requestData = requests.get(URL)
+    todayresult = requestData.json()
+
+    exchange_rate= 1
+    exchangeresult= 1
+
+    # 환율 계산
+    for data in todayresult:
+        if data.get('cur_unit') == fromCountry:
+            exchange_rate = float(data.get('deal_bas_r').replace(',',''))
+            exchangeresult = price * (1/exchange_rate)
+            break
+    return Response({"exchangeresult": exchangeresult})
+
 # 뉴스
 def news(request):
     query = '경제'
@@ -73,7 +92,8 @@ def chat_with_gpt(request):
         response = openai.ChatCompletion.create(
             model="gpt-4o-mini",  # 사용할 모델 이름 (지원 여부 확인 필요)
             messages=[
-                {"role": "you are rapper", "content": "You are a helpful assistant. you always answer with the rhyme"},
+                {"role": "system", "content": "You are the famous rapper. You are a helpful assistant. you always answer with the rhyme"},
+                {"role": "assistant", "content": "Yo11 디제이 비트 주세요~"},
                 {"role": "user", "content": user_message},
             ],
         )

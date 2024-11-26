@@ -32,6 +32,47 @@
     <form @submit.prevent="exchange">
       <button type="submit">계산하기</button>
     </form>
+    
+  </div>
+  <br>
+
+
+
+
+  <div class="container">
+    <h3>타국 통화 계산기</h3>
+    <!-- 국가 선택 드롭다운 -->
+    <div class="filters">
+      <label for="country">국가</label>
+      <select id="country" v-model="inputCountrytwo">
+        <option value="">국가 선택</option>
+        <option v-for="country in countriestwo" :key="country" :value="country">
+          {{ country }}
+        </option>
+      </select>
+    </div>
+
+    <!-- 금액 입력 -->
+    <div class="filters">
+      <label for="won">금액</label>
+      <input 
+        type="number" 
+        id="won" 
+        v-model="money" 
+        placeholder="금액 입력" 
+      />
+    </div>
+
+    <!-- 환율 정보 출력 -->
+    <div class="result" v-if="formattedChangeMoneytwo">
+      <p>환전 결과: {{ formattedChangeMoneytwo }}</p>
+    </div>
+
+    <!-- 계산하기 버튼 -->
+    <form @submit.prevent="exchangetwo">
+      <button type="submit">계산하기</button>
+    </form>
+    
   </div>
 </template>
 
@@ -48,16 +89,29 @@ const exchangeStore = useExchangeStore();
 const store = useAccountStore();
 
 const changedMoney = ref(0)
+const changedMoneytwo = ref(0)
+
 const countries = exchangeStore.countries;
+const countriestwo = exchangeStore.countries;
+
 const countryCodes = exchangeStore.countryCodes;
+const countryCodestwo = exchangeStore.countryCodes;
 
 const inputCountry = ref(''); // 선택된 국가
 const won = ref(0); // 입력된 금액
 const changeMoney = ref(null); // 환전 결과
 
+const inputCountrytwo = ref(''); // 선택된 국가
+const money = ref(0); // 입력된 금액
+const changeMoneytwo = ref(null); // 환전 결과
+
 // 계산된 환전 결과에 쉼표 추가
 const formattedChangeMoney = computed(() => {
   return changedMoney.value ? changedMoney.value.toLocaleString() : '';
+});
+
+const formattedChangeMoneytwo = computed(() => {
+  return changedMoneytwo.value ? changedMoneytwo.value.toLocaleString() : '';
 });
 
 // 계산하기 함수
@@ -82,6 +136,35 @@ const exchange = () => {
       exchangeStore.getChange(res.data); // Store에 환율 정보 저장
       changeMoney.value = res.data; // 환전 결과 업데이트
       changedMoney.value = changeMoney.value.exchangeresult
+    })
+    .catch((err) => {
+      console.error('환전 요청 실패:', err);
+      alert('환전 요청 중 오류가 발생했습니다.');
+    });
+};
+
+// 계산하기 함수
+const exchangetwo = () => {
+  if (!inputCountrytwo.value || !money.value) {
+    alert('국가와 금액을 입력해주세요.');
+    return;
+  }
+
+  const countryCodetwo = countryCodestwo[inputCountrytwo.value]; // 선택된 국가 코드 가져오기
+  if (!countryCodetwo) {
+    alert('올바른 국가를 선택해주세요.');
+    return;
+  }
+
+  // axios 요청
+  axios({
+    url: `${store.API_URL}/info/foreign/${countryCodetwo}/${money.value}/`,
+    method: 'GET',
+  })
+    .then((res) => {
+      exchangeStore.getChange(res.data); // Store에 환율 정보 저장
+      changeMoneytwo.value = res.data; // 환전 결과 업데이트
+      changedMoneytwo.value = changeMoneytwo.value.exchangeresult
     })
     .catch((err) => {
       console.error('환전 요청 실패:', err);
