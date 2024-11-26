@@ -52,9 +52,7 @@
     </div>
 
     <!-- 메인 컨텐츠 -->
-    <main class="main-content">
-      <RouterView />
-    </main>
+    <RouterView />
   </div>
 </template>
 
