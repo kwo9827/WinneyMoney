@@ -187,6 +187,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # 이메일 인증 건너뛰기
 
 # # 이메일 설정
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
