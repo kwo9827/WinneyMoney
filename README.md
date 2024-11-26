@@ -106,7 +106,7 @@
 
 ## ERD
 
-<img src="ERD.png" >
+<img src="ERD.png" alt='erd' >
 
 --
 
