@@ -1,7 +1,7 @@
 
 # 📚 금융 프로젝트 (WinneyMoney)
 
-**WinneyMoney**는 **금융상품 추천 서비스**를 제공하는 웹 애플리케이션입니다. 이 프로젝트는 **Vue.js**와 **Django**를 기반으로 백엔드와 프론트엔드를 분리 개발하였으며, 사용자 경험을 극대화하기 위해 **카카오 지도 API**와 **금융상품통합비교공시 API**를 활용하였습니다. 사용자가 손쉽게 금융 상품을 비교하고 추천받을 수 있도록 설계되었습니다.
+**WinneyMoney**는 **금융상품 추천 서비스**를 제공하는 웹 애플리케이션입니다. 이 프로젝트는 **Vue.js**와 **Django**를 기반으로 백엔드와 프론트엔드를 분리 개발하였으며, 사용자 경험을 극대화하기 위해 **카카오 지도 API**와 **금융상품통합비교공시 API**, **네이버 검색 API**, **한국수출입 은행 API**, **Finance Data Reader API**를 활용하였습니다. 사용자가 손쉽게 금융 상품을 비교하고 추천받을 수 있도록 설계되었습니다.
 
 ---
 
@@ -38,7 +38,10 @@
 - 커뮤니티 게시판을 통한 사용자 간 정보 공유
 - **Vue.js**와 **Django** 기반의 프론트엔드 및 백엔드 분리 구조
 - **카카오 지도 API**를 활용한 은행 위치 정보 제공
-- 실시간 환율 계산 기능
+- **한국수출입 은행 API**를 활용한 실시간 환율 계산기 제공
+- **네이버 검색 API**를 활용한 최신 네이버 뉴스 제공
+- **Chat GPT API**를 활용한 챗봇 기능 제공
+- **Finance Data Reader API**를 활용하여 포트폴리오 자산 정보 업데이트 
 
 ---
 
@@ -47,7 +50,7 @@
 - **Frontend:** Vue.js, JavaScript, Bootstrap
 - **Backend:** Django, Django REST framework
 - **Database:** SQLite (개발 단계)
-- **API:** 카카오 지도 API, 금융상품통합비교공시 API, 한국수출입은행 API
+- **API:** 카카오 지도 API, 금융상품통합비교공시 API, 한국수출입은행 API, 네이버 검색 API, Chat GPT API, Finance Data Reader API
 - **Deployment:** 로컬 개발 환경 (향후 클라우드 서버 배포 예정)
 - **Version Control:** Git, GitHub
 
