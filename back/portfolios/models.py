@@ -9,8 +9,8 @@ class Portfolio(models.Model):
     name = models.CharField(max_length=100)
 
     # 사용자 입력 값
-    current_cash = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # 즉시 가용 자산
-    monthly_income = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # 월 평균 수입
+    current_cash = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    monthly_income = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     predicted_economy = models.CharField(
         max_length=100,
         choices=[('recession', '하락'), ('growth', '성장'), ('stability', '유지')],
@@ -25,9 +25,9 @@ class Portfolio(models.Model):
     )
 
     # 자동 계산 값
-    total_investment = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # 총 자산
-    total_volatility = models.FloatField(null=True, blank=True)  # 포트폴리오 총 변동성
-    allocation = models.JSONField(default=dict, blank=True)  # 실제 보유 비율
+    total_investment = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    total_volatility = models.FloatField(null=True, blank=True)
+    allocation = models.JSONField(default=dict, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -36,8 +36,8 @@ class Portfolio(models.Model):
         """
         포트폴리오의 총 자산 계산.
         """
-        stock_total = sum([stock.total_investment for stock in self.stocks.all()])
-        crypto_total = sum([crypto.total_investment for crypto in self.cryptocurrencies.all()])
+        stock_total = sum([stock.current_investment for stock in self.stocks.all()])
+        crypto_total = sum([crypto.current_investment for crypto in self.cryptocurrencies.all()])
         deposit_total = sum([deposit.balance for deposit in self.portfolio_deposits.all()])
         saving_total = sum([saving.balance for saving in self.portfolio_savings.all()])
 
@@ -59,30 +59,33 @@ class Portfolio(models.Model):
         """
         실제 보유 자산 비율 계산.
         """
-        stock_total = sum([stock.total_investment for stock in self.stocks.all()])
-        crypto_total = sum([crypto.total_investment for crypto in self.cryptocurrencies.all()])
+        stock_total = sum([stock.current_investment for stock in self.stocks.all()])
+        crypto_total = sum([crypto.current_investment for crypto in self.cryptocurrencies.all()])
         deposit_total = sum([deposit.balance for deposit in self.portfolio_deposits.all()])
         saving_total = sum([saving.balance for saving in self.portfolio_savings.all()])
         total = stock_total + crypto_total + deposit_total + saving_total + self.current_cash
 
         if total > 0:
             return {
-                "stock": round((stock_total / total) * 100, 2),
-                "crypto": round((crypto_total / total) * 100, 2),
-                "deposit": round((deposit_total / total) * 100, 2),
-                "saving": round((saving_total / total) * 100, 2),
-                "cash": round((self.current_cash / total) * 100, 2),
+                "stock": float((stock_total / total) * 100),
+                "crypto": float((crypto_total / total) * 100),
+                "deposit": float((deposit_total / total) * 100),
+                "saving": float((saving_total / total) * 100),
+                "cash": float((self.current_cash / total) * 100),
             }
         return {"stock": 0.0, "crypto": 0.0, "deposit": 0.0, "saving": 0.0, "cash": 0.0}
 
     def save(self, *args, **kwargs):
-        # 자동 계산 값 업데이트
-        self.total_investment = self.calculate_total_investment()
-        self.allocation = self.calculate_allocation()
-        self.total_volatility = self.calculate_total_volatility()
-
-        # 객체를 데이터베이스에 저장
+        # 객체가 이미 저장된 경우에만 계산
         super().save(*args, **kwargs)
+
+        # 관계 필드를 사용한 계산을 위해 다시 저장
+        self.total_investment = self.calculate_total_investment()
+        self.total_volatility = self.calculate_total_volatility()
+        self.allocation = self.calculate_allocation()
+
+        # 다시 저장하여 계산된 값을 반영
+        super().save(update_fields=['total_investment', 'total_volatility', 'allocation'])
 
     def __str__(self):
         return f"{self.user.username}'s Portfolio: {self.name}"
@@ -95,14 +98,22 @@ class Stock(models.Model):
     total_investment = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     quantity = models.DecimalField(max_digits=15, decimal_places=6, editable=False)  # 자동 계산
     current_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    current_investment = models.DecimalField(max_digits=15, decimal_places=2, editable=False, default=0)  # 현재 총 투자 금액
     volatility = models.FloatField(null=True, blank=True)  # 변동성 추가
     created_at = models.DateTimeField(auto_now_add=True)
 
     def calculate_quantity(self):
         return self.total_investment / self.purchase_price
+    
+    def calculate_current_investment(self):
+        """
+        현재 총 투자 금액: 수량 * 현재가
+        """
+        return self.quantity * self.current_value
 
     def save(self, *args, **kwargs):
         self.quantity = self.calculate_quantity()
+        self.current_investment = self.calculate_current_investment()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -117,14 +128,22 @@ class Crypto(models.Model):
     total_investment = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     quantity = models.DecimalField(max_digits=15, decimal_places=6, editable=False)  # 자동 계산
     current_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    current_investment = models.DecimalField(max_digits=15, decimal_places=2, editable=False, default=0)  # 현재 총 투자 금액
     volatility = models.FloatField(null=True, blank=True)  # 변동성 추가
     created_at = models.DateTimeField(auto_now_add=True)
 
     def calculate_quantity(self):
         return self.total_investment / self.purchase_price
+    
+    def calculate_current_investment(self):
+        """
+        현재 총 투자 금액: 수량 * 현재가
+        """
+        return self.quantity * self.current_value
 
     def save(self, *args, **kwargs):
         self.quantity = self.calculate_quantity()
+        self.current_investment = self.calculate_current_investment()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -172,6 +191,9 @@ class RecommendationLog(models.Model):
     object_id = models.PositiveIntegerField()  # 추천 상품의 ID
     product = GenericForeignKey("content_type", "object_id")  # 실제 추천 상품
 
+    recommended_volatility = models.FloatField(blank=True, null=True)  # 추천 후 변동성 추가
+    recommended_allocation = models.JSONField(default=dict, blank=True)  # 추천 비율 저장
+    recommended_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)  # 추천 금액
     reason = models.TextField(blank=True, null=True)  # 추천 이유
     created_at = models.DateTimeField(auto_now_add=True)  # 추천 생성일
 

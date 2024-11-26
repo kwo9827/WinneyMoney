@@ -8,6 +8,8 @@ export const usePortfolioStore = defineStore("portfolio", () => {
   const portfolios = reactive([]); // 모든 사용자 포트폴리오
   const portfolio = reactive({
     name: "",
+    current_cash: 0,
+    monthly_income: 0,
     predicted_economy: null,
     risk_preference: null,
     total_investment: 0,

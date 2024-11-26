@@ -35,9 +35,11 @@
         <Step2 v-if="currentStep === 1" @next="validateAndNext" @prev="changeStep('prev')" />
         <Step3 v-if="currentStep === 2" @next="validateAndNext" @prev="changeStep('prev')" />
         <Step4 v-if="currentStep === 3" @next="validateAndNext" @prev="changeStep('prev')" />
-        <Step5 v-if="currentStep === 4" @next="validateAndNext" />
-        <Step6 v-if="currentStep === 5" @submit="submitPortfolio" @prev="changeStep('prev')"/>
-        <Step7 v-if="currentStep === 6" />
+        <Step5 v-if="currentStep === 4" @next="validateAndNext" @prev="changeStep('prev')" />
+        <Step6 v-if="currentStep === 5" @next="validateAndNext" @prev="changeStep('prev')" />
+        <Step7 v-if="currentStep === 6" @next="validateAndNext" />
+        <Step8 v-if="currentStep === 7" @submit="submitPortfolio" @prev="changeStep('prev')"/>
+        <Step9 v-if="currentStep === 8" />
       </v-card-text>
     </v-card>
 
@@ -59,9 +61,11 @@ import Step4 from "@/components/portfolio/Step4.vue";
 import Step5 from "@/components/portfolio/Step5.vue";
 import Step6 from "@/components/portfolio/Step6.vue";
 import Step7 from "@/components/portfolio/Step7.vue";
+import Step8 from "@/components/portfolio/Step8.vue";
+import Step9 from "@/components/portfolio/Step9.vue";
 
 const currentStep = ref(0);
-const totalSteps = 7; // 총 단계 수
+const totalSteps = 9; // 총 단계 수
 const portfolioStore = usePortfolioStore();
 const isLoading = ref(false);
 const errorMessage = ref("");
@@ -128,7 +132,7 @@ const submitPortfolio = async () => {
 .progress-tick-bar {
   position: relative;
   width: 100%;
-  height: px;
+  height: 30px;
   background-color: #ddd;
   border-radius: 4px;
   margin-bottom: 10px;

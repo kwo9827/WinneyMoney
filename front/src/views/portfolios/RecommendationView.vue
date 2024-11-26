@@ -11,14 +11,35 @@
         <h2>{{ recommendations.portfolio.name }} 포트폴리오</h2>
       </v-card-title>
       <v-card-text>
-        <!-- 차트 -->
-        <div class="chart-container">
-          <PieChart :chart-data="chartData" :options="chartOptions" />
+        <!-- 총 투자 금액과 변동성 -->
+        <p><strong>총 투자 금액:</strong> {{ formatCurrency(recommendations.portfolio.total_investment) }}</p>
+        <p><strong>현재 포트폴리오 변동성:</strong> {{ recommendations.portfolio.total_volatility?.toFixed(2) || 'N/A' }}</p>
+
+        <!-- 차트 병렬 배치 -->
+        <v-row>
+          <v-col cols="12" md="6">
+            <div class="chart-container">
+              <h3>현재 비율</h3>
+              <PieChart :chart-data="currentChartData" :options="chartOptions" />
+            </div>
+          </v-col>
+          <v-col cols="12" md="6">
+            <div class="chart-container">
+              <h3>추천 비율</h3>
+              <PieChart :chart-data="recommendedChartData" :options="chartOptions" />
+            </div>
+          </v-col>
+        </v-row>
+
+        <!-- 변동성 변화 -->
+        <div class="volatility-section">
+          <p><strong>추천 후 예상 변동성:</strong> {{ recommendations.recommendations[0].recommended_volatility.toFixed(2) || 'N/A' }}</p>
+          <p><em>추천 상품에 따른 변동성 변경을 확인하세요.</em></p>
+          <!-- {{ recommendations.recommendations[3] }} -->
+          <!-- {{ recommendations.investment_allocation }}
+           {{ recommendations.saving_allocation }} 
+          {{ recommendations.recommendations[0].recommended_volatility }} -->
         </div>
-        <!-- 변동성 설명 -->
-        <v-alert type="info" dense>
-          고객님의 포트폴리오 변동성은 <strong>{{ recommendations.portfolio.volatility || 'N/A' }}</strong>입니다.
-        </v-alert>
       </v-card-text>
     </v-card>
 
@@ -43,29 +64,21 @@
             class="recommendation-item"
             outlined
           >
-            <v-img
-              src="https://via.placeholder.com/300"
-              alt="Product Image"
-              height="150"
-              class="recommendation-image"
-            />
             <v-card-title class="recommendation-title">
               {{ item.product_name }}
               <span class="product-type">({{ item.product_type }})</span>
             </v-card-title>
             <v-card-text>
-              <p class="recommendation-description">추천 이유:</p>
+              <p class="recommendation-description"><strong>추천 이유:</strong></p>
               <ul class="recommendation-reasons">
-                <li v-for="(reason, idx) in item.reason.split('\n')" :key="idx">
+                <li v-for="(reason, idx) in item.reason.split(' | ')" :key="idx">
                   {{ reason }}
                 </li>
               </ul>
+              <p class="recommended-amount">
+                <strong>추천 금액:</strong> {{ formatCurrency(item.recommended_amount) }}
+              </p>
             </v-card-text>
-            <v-card-actions>
-              <v-btn color="primary" block outlined>
-                자세히 보기
-              </v-btn>
-            </v-card-actions>
           </v-card>
         </div>
       </v-card-text>
@@ -97,13 +110,24 @@ const portfolioStore = usePortfolioStore();
 const portfolioId = route.params.portfolioId;
 
 // 차트 데이터 및 옵션
-const chartData = ref({
-  labels: ["Stocks", "Cryptocurrencies", "Others"],
+const currentChartData = ref({
+  labels: ["주식", "암호화폐", "예금", "적금", "현금"],
   datasets: [
     {
-      data: [0, 0, 0], // 초기값 설정
-      backgroundColor: ["#42A5F5", "#66BB6A", "#FFA726"],
-      hoverBackgroundColor: ["#64B5F6", "#81C784", "#FFB74D"],
+      data: [0, 0, 0, 0, 0],
+      backgroundColor: ["#FF9AA2", "#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7"],
+      hoverBackgroundColor: ["#FF9AA2", "#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7"],
+    },
+  ],
+});
+
+const recommendedChartData = ref({
+  labels: ["주식", "암호화폐", "예금", "적금", "현금"],
+  datasets: [
+    {
+      data: [0, 0, 0, 0, 0],
+      backgroundColor: ["#C7CEEA", "#B5EAD7", "#E2F0CB", "#FFDAC1", "#FFB7B2"],
+      hoverBackgroundColor: ["#C7CEEA", "#B5EAD7", "#E2F0CB", "#FFDAC1", "#FFB7B2"],
     },
   ],
 });
@@ -120,7 +144,7 @@ const chartOptions = ref({
       callbacks: {
         label: function (tooltipItem) {
           const value = tooltipItem.raw;
-          const total = chartData.value.datasets[0].data.reduce((acc, cur) => acc + cur, 0);
+          const total = tooltipItem.dataset.data.reduce((acc, cur) => acc + cur, 0);
           const percentage = ((value / total) * 100).toFixed(2);
           return `${tooltipItem.label}: ${percentage}%`;
         },
@@ -140,12 +164,26 @@ const fetchRecommendations = async (portfolioId) => {
     const data = await portfolioStore.fetchRecommendations(portfolioId);
     recommendations.value = data;
 
-    // 차트 데이터 업데이트
-    const stockInvestment = recommendations.value?.portfolio?.stocks || 0;
-    const cryptoInvestment = recommendations.value?.portfolio?.cryptocurrencies || 0;
-    const otherInvestment = recommendations.value?.portfolio?.others || 0;
+    // 현재 비율 차트 데이터 업데이트
+    const currentAllocation = recommendations.value?.portfolio?.allocation || {};
+    currentChartData.value.datasets[0].data = [
+      currentAllocation.stock || 0,
+      currentAllocation.crypto || 0,
+      currentAllocation.deposit || 0,
+      currentAllocation.saving || 0,
+      currentAllocation.cash || 0,
+    ];
 
-    chartData.value.datasets[0].data = [stockInvestment, cryptoInvestment, otherInvestment];
+    // 추천 비율 차트 데이터 업데이트
+    const recommendedAllocation = recommendations.value?.investment_allocation || {};
+    const savingAllocation = recommendations.value?.saving_allocation || {};
+    recommendedChartData.value.datasets[0].data = [
+      recommendedAllocation.stock || 0,
+      recommendedAllocation.crypto || 0,
+      savingAllocation.deposit || 0,
+      savingAllocation.saving || 0,
+      0, // 현금
+    ];
   } catch (error) {
     errorMessage.value = error.message || "추천 데이터를 불러오지 못했습니다.";
   }
@@ -153,13 +191,20 @@ const fetchRecommendations = async (portfolioId) => {
 
 // 페이지 마운트 시 데이터 가져오기
 onMounted(() => {
-  console.log("포트폴리오 ID:", portfolioId);
   fetchRecommendations(portfolioId);
 });
 
 // 뒤로 가기
 const goBack = () => {
   router.push({ name: "ProfileView" });
+};
+
+// 금액 포맷 함수
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat("ko-KR", {
+    style: "currency",
+    currency: "KRW",
+  }).format(value);
 };
 </script>
 
@@ -180,8 +225,14 @@ const goBack = () => {
 
 .chart-container {
   width: 100%;
-  height: 500px; /* 차트 높이를 늘려 더 보기 쉽게 조정 */
+  height: 400px;
   margin-bottom: 20px;
+}
+
+.volatility-section {
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #555;
 }
 
 .recommendation-card {
@@ -207,19 +258,9 @@ const goBack = () => {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-.recommendation-image {
-  border-radius: 10px 10px 0 0;
-}
-
 .recommendation-title {
   font-weight: bold;
   color: #2c3e50;
-  margin-bottom: 8px;
-}
-
-.recommendation-description {
-  font-size: 1rem;
-  color: #555;
   margin-bottom: 8px;
 }
 
@@ -232,5 +273,11 @@ const goBack = () => {
   font-size: 0.9rem;
   color: #888;
   margin-left: 5px;
+}
+
+.recommended-amount {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 10px;
 }
 </style>
