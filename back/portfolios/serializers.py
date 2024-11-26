@@ -12,6 +12,7 @@ from finlife.models import DepositProducts, SavingProducts
 
 # 추천 로그 Serializer
 class RecommendationLogSerializer(serializers.ModelSerializer):
+    product_id = serializers.SerializerMethodField()  # 상품 ID 필드 추가
     product_name = serializers.SerializerMethodField()
     product_type = serializers.SerializerMethodField()
 

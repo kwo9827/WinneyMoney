@@ -32,6 +32,14 @@
         {{ period }}개월
         <span>{{ selectedSortPeriod === period ? (sortOrder === 'asc' ? '▲' : '▼') : '' }}</span>
       </button>
+      
+      <!-- 정렬 초기화 버튼 -->
+      <button
+        class="reset-button"
+        @click="resetSort"
+      >
+        정렬 초기화
+      </button>
     </div>
 
     <!-- 데이터가 없을 때 로딩 메시지 -->
@@ -156,7 +164,14 @@ const toggleSort = (period) => {
     sortOrder.value = 'asc';
   }
 };
+
+// 정렬 초기화
+const resetSort = () => {
+  selectedSortPeriod.value = null;  // 정렬된 기간 초기화
+  sortOrder.value = 'asc';  // 정렬 순서를 기본값(오름차순)으로 초기화
+};
 </script>
+
 
 <style scoped>
 .container {
@@ -246,4 +261,19 @@ const toggleSort = (period) => {
   color: #b0b0b0;
   cursor: not-allowed;
 }
+
+.reset-button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  background-color: #e74c3c;
+  color: white;
+}
+
+.reset-button:hover {
+  background-color: #c0392b;
+}
+
 </style>

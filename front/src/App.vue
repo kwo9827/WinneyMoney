@@ -45,6 +45,9 @@
     <main>
       <RouterView />
     </main>
+
+    <!-- 챗봇 -->
+    <Chatbot />
   </div>
 </template>
 
@@ -52,6 +55,7 @@
 import { ref } from "vue";
 import { RouterLink, RouterView } from "vue-router";
 import { useAccountStore } from "@/stores/accounts";
+import Chatbot from "./components/Info/Chatbot.vue";
 
 const store = useAccountStore();
 const dropdownOpen = ref(false);
@@ -60,7 +64,6 @@ const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value;
   console.log("드롭다운 상태:", dropdownOpen.value); // 상태 변화 확인
 };
-
 
 const logOut = () => {
   store.logOut();
@@ -80,6 +83,7 @@ const confirmDeleteAccount = () => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  position: relative; /* 챗봇 배치를 위해 상대적 위치 설정 */
 }
 
 /* 네비게이션 바 스타일 */
@@ -184,4 +188,107 @@ const confirmDeleteAccount = () => {
 main {
   padding: 1rem;
 }
+
+/* 챗봇 컨테이너 */
+.chatbot {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 280px; /* 적당한 크기로 설정 */
+  height: 400px; /* 적당한 높이 */
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9); /* 투명 배경 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* 부드러운 그림자 */
+  backdrop-filter: blur(5px); /* 배경 블러 효과 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1000; /* 다른 요소 위에 표시 */
+}
+
+/* 메시지 표시 영역 */
+.messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto; /* 스크롤 가능 */
+}
+
+.messages .user {
+  text-align: right;
+  margin-bottom: 10px;
+}
+
+.messages .user span {
+  display: inline-block;
+  background: #3498db; /* 파란색 배경 */
+  color: white;
+  padding: 8px 12px;
+  border-radius: 15px;
+  max-width: 75%; /* 최대 폭 제한 */
+  word-wrap: break-word; /* 긴 단어 줄바꿈 */
+  font-size: 0.9rem;
+}
+
+.messages .assistant {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.messages .assistant span {
+  display: inline-block;
+  background: #e1e1e1; /* 회색 배경 */
+  color: #333;
+  padding: 8px 12px;
+  border-radius: 15px;
+  max-width: 75%; /* 최대 폭 제한 */
+  word-wrap: break-word; /* 긴 단어 줄바꿈 */
+  font-size: 0.9rem;
+}
+
+/* 입력 폼 */
+.input-form {
+  display: flex;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.input-form input {
+  flex: 1; /* 입력 필드가 남은 공간 차지 */
+  padding: 10px;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  border-bottom-left-radius: 10px; /* 둥근 모서리 */
+  background: rgba(255, 255, 255, 0.8); /* 투명한 배경 */
+  color: #333;
+}
+
+.input-form button {
+  padding: 10px 20px; /* 버튼 크기 조정 */
+  border: none;
+  background: #3498db;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-bottom-right-radius: 10px; /* 둥근 모서리 */
+  transition: background-color 0.3s;
+}
+
+.input-form button:hover {
+  background: #2874a6; /* 호버 시 버튼 색상 변경 */
+}
+
+/* 스크롤바 스타일 */
+.messages::-webkit-scrollbar {
+  width: 6px; /* 스크롤바 너비 */
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 100, 0.5); /* 스크롤바 색상 */
+  border-radius: 3px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: transparent; /* 트랙은 투명 */
+}
+
 </style>

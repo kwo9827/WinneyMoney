@@ -26,6 +26,9 @@ CURRENCY_API_KEY = env('CURRENCY_API_KEY')
 NAVER_CLIENT_ID = config('NAVER_CLIENT_ID')
 NAVER_CLIENT_SECRET = config('NAVER_CLIENT_SECRET')
 
+# ChatGPT API Key
+OPENAI_API_KEY = config('OPENAI_API_KEY')
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 

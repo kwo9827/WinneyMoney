@@ -35,6 +35,8 @@ import SavingDetailView from '@/views/finance/saving/SavingDetailView.vue'
 // portfolio 기능
 import PortfolioCreateView from '@/views/portfolios/PortfolioCreateView.vue'
 import RecommendationView from '@/views/portfolios/RecommendationView.vue'
+import DepositPortDetailView from '@/views/portfolios/DepositPortDetailView.vue'
+import SavingPortDetailView from '@/views/portfolios/SavingPortDetailView.vue'
 
 import { useAccountStore } from '@/stores/accounts'
 
@@ -191,7 +193,19 @@ const router = createRouter({
       path: '/recommendation/:portfolioId',
       name: 'RecommendationView',
       component: RecommendationView
-    }
+    },
+    // 예금 포트폴리오 상세
+    {
+      path: '/portfolio/:portfolio_id/deposit/:product_id',
+      name: 'DepositPortDetailView',
+      component: DepositPortDetailView,
+    },
+    // 적금 포트폴리오 상세
+    {
+      path: '/portfolio/:portfolio_id/saving/:product_id',
+      name: 'SavingPortDetailView',
+      component: SavingPortDetailView,
+    },
   ],
 })
 

@@ -2,25 +2,25 @@
   <div class="container">
     <!-- 상품 정보 카드 -->
     <div class="detail-card">
-      <h1 class="title">{{ deposit.kor_co_nm }} - {{ deposit.fin_prdt_nm }}</h1>
-      <p class="subtitle">가입 방법: {{ deposit.join_way }}</p>
-      <p class="subtitle">만기 후 이자율: {{ deposit.mtrt_int }}</p>
-      <p class="subtitle">우대 조건: {{ deposit.spcl_cnd }}</p>
+      <h1 class="title">{{ saving.kor_co_nm }} - {{ saving.fin_prdt_nm }}</h1>
+      <p class="subtitle">가입 방법: {{ saving.join_way }}</p>
+      <p class="subtitle">만기 후 이자율: {{ saving.mtrt_int }}</p>
+      <p class="subtitle">우대 조건: {{ saving.spcl_cnd }}</p>
       <p class="subtitle">
         가입 제한:
-        <span v-if="deposit.join_deny === 1">제한 없음</span>
-        <span v-else-if="deposit.join_deny === 2">서민 전용</span>
-        <span v-else-if="deposit.join_deny === 3">일부 제한</span>
+        <span v-if="saving.join_deny === 1">제한 없음</span>
+        <span v-else-if="saving.join_deny === 2">서민 전용</span>
+        <span v-else-if="saving.join_deny === 3">일부 제한</span>
         <span v-else>정보 없음</span>
       </p>
       <p class="subtitle">
-        최고 한도: {{ deposit.max_limit === -1 ? '제한 없음' : deposit.max_limit + '원' }}
+        최고 한도: {{ saving.max_limit === -1 ? '제한 없음' : saving.max_limit + '원' }}
       </p>
 
       <!-- 금리 정보 -->
       <p class="section-title">기간별 금리</p>
       <ul class="interest-list">
-        <li v-for="option in deposit.options" :key="option.save_trm" class="interest-item">
+        <li v-for="option in saving.options" :key="option.save_trm" class="interest-item">
           <span class="term">{{ option.save_trm }}개월:</span>
           <span class="rate">{{ option.intr_rate }}% (최대 {{ option.intr_rate2 }}%)</span>
         </li>
@@ -34,7 +34,7 @@
 
     <div class="button-container">
       <!-- 돌아가기 버튼 -->
-      <router-link :to="{ name: 'DepositView' }" class="back-button">목록으로 돌아가기</router-link>
+      <router-link :to="{ name: 'RecommendationView', params: { portfolioId: route.params.portfolio_id } }" class="back-button">목록으로 돌아가기</router-link>
 
       <!-- 가입/제거 버튼 -->
       <button @click="handleJoin" class="join-button">
@@ -49,15 +49,15 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useFinanceStore } from '@/stores/finance';
 import axios from 'axios';
-import Chart from "chart.js/auto";
+import Chart from 'chart.js/auto';
 
 const financeStore = useFinanceStore();
-const deposit = ref({}); // 예금 상품 정보
+const saving = ref({}); // 적금 상품 정보
 const isFavorite = ref(false); // 즐겨찾기 여부 상태
 const route = useRoute();
 
 // API 요청 URL
-const API_URL = 'http://127.0.0.1:8000/finlife/deposit-products/detail';
+const API_URL = 'http://127.0.0.1:8000/finlife/saving-products/detail';
 
 // 데이터 가져오기
 onMounted(() => {
@@ -65,10 +65,13 @@ onMounted(() => {
   axios
     .get(`${API_URL}/${product_id}/`) // 상품 상세 정보 API 호출
     .then((res) => {
-      console.log('데이터 가져오기 성공:', res.data);
-      deposit.value = res.data; // API 응답 데이터를 deposit에 저장
+      saving.value = res.data; // API 응답 데이터를 saving에 저장
       checkFavorite(); // 즐겨찾기 여부 확인
-      drawInterestChart(); // 차트 그리기
+
+      // 금리 차트 생성
+      if (saving.value.options) {
+        drawInterestChart();
+      }
     })
     .catch((err) => {
       console.error('데이터 가져오기 실패:', err.response || err);
@@ -78,36 +81,30 @@ onMounted(() => {
 // 즐겨찾기 여부 확인
 const checkFavorite = async () => {
   await financeStore.fetchFavorites(); // 즐겨찾기 데이터 최신화
-  isFavorite.value = financeStore.favoriteDeposits.some(
-    (item) => item.fin_prdt_cd === deposit.value.fin_prdt_cd
+  isFavorite.value = financeStore.favoriteSavings.some(
+    (item) => item.fin_prdt_cd === saving.value.fin_prdt_cd
   );
-  console.log('현재 isFavorite 상태:', isFavorite.value); // 상태 디버깅용
 };
 
-// 차트 그리기
+// 금리 차트 그리기
 const drawInterestChart = () => {
-  if (!deposit.value.options || deposit.value.options.length === 0) {
-    console.error("옵션 데이터가 없습니다. 차트를 그릴 수 없습니다.");
-    return;
-  }
+  const labels = saving.value.options.map(option => `${option.save_trm}개월`); // x축: 개월 수
+  const data = saving.value.options.map(option => option.intr_rate); // y축: 금리
 
-  const labels = deposit.value.options.map(option => `${option.save_trm}개월`); // x축: 개월수
-  const data = deposit.value.options.map(option => option.intr_rate); // y축: 이자율
-
-  const ctx = document.getElementById("interestChart").getContext("2d");
+  const ctx = document.getElementById('interestChart').getContext('2d');
 
   new Chart(ctx, {
-    type: "line", // 라인 차트
+    type: 'line', // 라인 차트
     data: {
       labels: labels,
       datasets: [
         {
-          label: "금리(%)",
+          label: '금리(%)',
           data: data,
-          borderColor: "#3498db",
-          backgroundColor: "rgba(52, 152, 219, 0.2)",
+          borderColor: '#27ae60',
+          backgroundColor: 'rgba(39, 174, 96, 0.2)',
           fill: true,
-          tension: 0.4, // 라인의 곡선 정도
+          tension: 0.4, // 곡선의 부드러움 정도
         },
       ],
     },
@@ -117,22 +114,22 @@ const drawInterestChart = () => {
       plugins: {
         legend: {
           display: true,
-          position: "top",
+          position: 'top',
         },
       },
       scales: {
         x: {
           title: {
             display: true,
-            text: "개월 수",
+            text: '기간(개월)',
           },
         },
         y: {
           title: {
             display: true,
-            text: "금리 (%)",
+            text: '금리(%)',
           },
-          beginAtZero: true, // y축을 0부터 시작
+          beginAtZero: true,
         },
       },
     },
@@ -142,9 +139,9 @@ const drawInterestChart = () => {
 // 가입/제거 버튼 클릭 처리
 const handleJoin = async () => {
   try {
-    await financeStore.toggleFavoriteDeposit(deposit.value.fin_prdt_cd); // 즐겨찾기 토글
+    await financeStore.toggleFavoriteSaving(saving.value.fin_prdt_cd); // 즐겨찾기 토글
     isFavorite.value = !isFavorite.value; // 상태 토글
-    alert(isFavorite.value ? '예금 즐겨찾기에 추가되었습니다.' : '예금 즐겨찾기에서 제거되었습니다.');
+    alert(isFavorite.value ? '적금 즐겨찾기에 추가되었습니다.' : '적금 즐겨찾기에서 제거되었습니다.');
   } catch (error) {
     alert('작업 중 오류가 발생했습니다.');
     console.error('handleJoin 오류:', error.response?.data || error.message);
@@ -222,7 +219,7 @@ const handleJoin = async () => {
 }
 
 .rate {
-  color: #3498db;
+  color: #27ae60;
   font-weight: bold;
 }
 
