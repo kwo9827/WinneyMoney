@@ -1,38 +1,40 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import Portfolio, Stock, Crypto
+from .models import Portfolio, Stock, Crypto, PortfolioDeposit, PortfolioSaving
 
-# Portfolio의 total_investment 및 volatility 업데이트 함수
+# Portfolio의 total_investment 및 allocation 업데이트 함수
 def update_portfolio_totals(portfolio):
-    # 총 투자 금액 계산
-    total_investment = sum(stock.total_investment for stock in portfolio.stocks.all()) + \
-                       sum(crypto.total_investment for crypto in portfolio.cryptocurrencies.all())
-    portfolio.total_investment = total_investment
+    """
+    Portfolio의 총 자산과 변동성, 비율을 업데이트.
+    """
+    # Portfolio의 계산 메서드를 호출
+    portfolio.total_investment = portfolio.calculate_total_investment()
+    portfolio.allocation = portfolio.calculate_allocation()
+    portfolio.total_volatility = portfolio.calculate_total_volatility()  # 변동성 계산
 
-    # 변동성 계산 (예시: 평균 변동성을 계산)
-    stock_volatility = [stock.volatility for stock in portfolio.stocks.all() if stock.volatility is not None]
-    crypto_volatility = [crypto.volatility for crypto in portfolio.cryptocurrencies.all() if crypto.volatility is not None]
-    all_volatility = stock_volatility + crypto_volatility
+    # 필요한 필드만 업데이트
+    portfolio.save(update_fields=['total_investment', 'allocation', 'total_volatility'])
 
-    portfolio.volatility = sum(all_volatility) / len(all_volatility) if all_volatility else None
-    portfolio.save(update_fields=['total_investment', 'volatility'])
-
-# Stock 추가 및 수정 시 Portfolio 업데이트
+# Stock 추가/수정/삭제 시 Portfolio 업데이트
 @receiver(post_save, sender=Stock)
-def update_portfolio_on_stock_save(sender, instance, **kwargs):
-    update_portfolio_totals(instance.portfolio)
-
-# Stock 삭제 시 Portfolio 업데이트
 @receiver(post_delete, sender=Stock)
-def update_portfolio_on_stock_delete(sender, instance, **kwargs):
+def update_portfolio_on_stock_change(sender, instance, **kwargs):
     update_portfolio_totals(instance.portfolio)
 
-# Crypto 추가 및 수정 시 Portfolio 업데이트
+# Crypto 추가/수정/삭제 시 Portfolio 업데이트
 @receiver(post_save, sender=Crypto)
-def update_portfolio_on_crypto_save(sender, instance, **kwargs):
+@receiver(post_delete, sender=Crypto)
+def update_portfolio_on_crypto_change(sender, instance, **kwargs):
     update_portfolio_totals(instance.portfolio)
 
-# Crypto 삭제 시 Portfolio 업데이트
-@receiver(post_delete, sender=Crypto)
-def update_portfolio_on_crypto_delete(sender, instance, **kwargs):
+# PortfolioDeposit 추가/수정/삭제 시 Portfolio 업데이트
+@receiver(post_save, sender=PortfolioDeposit)
+@receiver(post_delete, sender=PortfolioDeposit)
+def update_portfolio_on_deposit_change(sender, instance, **kwargs):
+    update_portfolio_totals(instance.portfolio)
+
+# PortfolioSaving 추가/수정/삭제 시 Portfolio 업데이트
+@receiver(post_save, sender=PortfolioSaving)
+@receiver(post_delete, sender=PortfolioSaving)
+def update_portfolio_on_saving_change(sender, instance, **kwargs):
     update_portfolio_totals(instance.portfolio)

@@ -1,15 +1,16 @@
 from django.db import models
 from django.conf import settings
 from finlife.models import DepositProducts, SavingProducts
-from datetime import date
 
 User = settings.AUTH_USER_MODEL
 
 class Portfolio(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="portfolios")
     name = models.CharField(max_length=100)
-    total_investment = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    volatility = models.FloatField(null=True, blank=True)
+
+    # 사용자 입력 값
+    current_cash = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # 즉시 가용 자산
+    monthly_income = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # 월 평균 수입
     predicted_economy = models.CharField(
         max_length=100,
         choices=[('recession', '하락'), ('growth', '성장'), ('stability', '유지')],
@@ -22,32 +23,66 @@ class Portfolio(models.Model):
         blank=True,
         null=True
     )
+
+    # 자동 계산 값
+    total_investment = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # 총 자산
+    total_volatility = models.FloatField(null=True, blank=True)  # 포트폴리오 총 변동성
+    allocation = models.JSONField(default=dict, blank=True)  # 실제 보유 비율
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    recommended_deposits = models.ManyToManyField(DepositProducts, related_name="recommended_to_portfolios", blank=True)
-    recommended_savings = models.ManyToManyField(SavingProducts, related_name="recommended_to_portfolios", blank=True)
-
     def calculate_total_investment(self):
-        stock_investment = sum([
-            stock.total_investment for stock in self.stocks.all()
-        ]) if self.pk else 0
+        """
+        포트폴리오의 총 자산 계산.
+        """
+        stock_total = sum([stock.total_investment for stock in self.stocks.all()])
+        crypto_total = sum([crypto.total_investment for crypto in self.cryptocurrencies.all()])
+        deposit_total = sum([deposit.balance for deposit in self.portfolio_deposits.all()])
+        saving_total = sum([saving.balance for saving in self.portfolio_savings.all()])
 
-        crypto_investment = sum([
-            crypto.total_investment for crypto in self.cryptocurrencies.all()
-        ]) if self.pk else 0
+        return stock_total + crypto_total + deposit_total + saving_total + self.current_cash
 
-        return stock_investment + crypto_investment
+    def calculate_total_volatility(self):
+        """
+        주식과 암호화폐의 변동성을 기반으로 포트폴리오 총 변동성 계산.
+        """
+        stock_volatility = [stock.volatility for stock in self.stocks.all() if stock.volatility is not None]
+        crypto_volatility = [crypto.volatility for crypto in self.cryptocurrencies.all() if crypto.volatility is not None]
+        all_volatility = stock_volatility + crypto_volatility
+
+        if all_volatility:
+            return sum(all_volatility) / len(all_volatility)
+        return 0
+
+    def calculate_allocation(self):
+        """
+        실제 보유 자산 비율 계산.
+        """
+        stock_total = sum([stock.total_investment for stock in self.stocks.all()])
+        crypto_total = sum([crypto.total_investment for crypto in self.cryptocurrencies.all()])
+        deposit_total = sum([deposit.balance for deposit in self.portfolio_deposits.all()])
+        saving_total = sum([saving.balance for saving in self.portfolio_savings.all()])
+        total = stock_total + crypto_total + deposit_total + saving_total + self.current_cash
+
+        if total > 0:
+            return {
+                "stock": round((stock_total / total) * 100, 2),
+                "crypto": round((crypto_total / total) * 100, 2),
+                "deposit": round((deposit_total / total) * 100, 2),
+                "saving": round((saving_total / total) * 100, 2),
+                "cash": round((self.current_cash / total) * 100, 2),
+            }
+        return {"stock": 0.0, "crypto": 0.0, "deposit": 0.0, "saving": 0.0, "cash": 0.0}
 
     def save(self, *args, **kwargs):
+        # 자동 계산 값 업데이트
+        self.total_investment = self.calculate_total_investment()
+        self.allocation = self.calculate_allocation()
+        self.total_volatility = self.calculate_total_volatility()
+
         # 객체를 데이터베이스에 저장
         super().save(*args, **kwargs)
-        
-        # 저장 이후에 총 투자 금액 계산
-        if self.pk:
-            self.total_investment = self.calculate_total_investment()
-            # 업데이트된 total_investment를 다시 저장
-            super().save(update_fields=["total_investment"])
 
     def __str__(self):
         return f"{self.user.username}'s Portfolio: {self.name}"
@@ -69,11 +104,6 @@ class Stock(models.Model):
     def save(self, *args, **kwargs):
         self.quantity = self.calculate_quantity()
         super().save(*args, **kwargs)
-
-    def calculate_profit(self):
-        if self.current_value:
-            return (self.current_value - self.purchase_price) * float(self.quantity)
-        return None
 
     def __str__(self):
         return f"{self.ticker} in {self.portfolio.name}"
@@ -97,13 +127,29 @@ class Crypto(models.Model):
         self.quantity = self.calculate_quantity()
         super().save(*args, **kwargs)
 
-    def calculate_profit(self):
-        if self.current_value:
-            return (self.current_value - self.purchase_price) * float(self.quantity)
-        return None
-
     def __str__(self):
         return f"{self.name} ({self.symbol}) in {self.portfolio.name}"
+
+
+class PortfolioDeposit(models.Model):
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name="portfolio_deposits")
+    deposit_product = models.ForeignKey(DepositProducts, on_delete=models.CASCADE, related_name="portfolio_deposits")
+    balance = models.DecimalField(max_digits=15, decimal_places=2)  # 가입 금액
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.portfolio.name} - {self.deposit_product.fin_prdt_nm}"
+
+
+class PortfolioSaving(models.Model):
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name="portfolio_savings")
+    saving_product = models.ForeignKey(SavingProducts, on_delete=models.CASCADE, related_name="portfolio_savings")
+    balance = models.DecimalField(max_digits=15, decimal_places=2)  # 가입 금액
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.portfolio.name} - {self.saving_product.fin_prdt_nm}"
+
 
 
 class UserResponse(models.Model):

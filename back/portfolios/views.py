@@ -3,12 +3,18 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Portfolio, Stock, Crypto
+from .models import (
+    Portfolio, Stock, Crypto, PortfolioDeposit, PortfolioSaving, RecommendationLog
+)
 from finlife.models import DepositProducts, SavingProducts
-from .serializers import PortfolioSerializer, StockSerializer, CryptoSerializer, RecommendationLogSerializer
+from .serializers import (
+    PortfolioSerializer, StockSerializer, CryptoSerializer,
+    RecommendationLogSerializer, PortfolioDepositSerializer, PortfolioSavingSerializer
+)
 from rest_framework.permissions import IsAuthenticated
 import FinanceDataReader as fdr
-import datetime
+from datetime import datetime
+import pandas as pd
 
 from .models import RecommendationLog
 def recommend_products_logic(portfolio):
@@ -16,166 +22,164 @@ def recommend_products_logic(portfolio):
         # 포트폴리오 관련 변수 초기화
         predicted_economy = portfolio.predicted_economy
         risk_preference = portfolio.risk_preference
+        volatility = portfolio.total_volatility
+        current_allocation = portfolio.allocation
+        current_cash = portfolio.current_cash
+        monthly_income = portfolio.monthly_income
 
-        total_investment = portfolio.total_investment
-        stock_investment = sum(stock.purchase_price * stock.quantity for stock in portfolio.stocks.all())
-        crypto_investment = sum(crypto.purchase_price * crypto.quantity for crypto in portfolio.cryptocurrencies.all())
+        # 기본 추천 비율 설정
+        if predicted_economy == "growth":
+            target_allocation = {"investment": 60, "saving": 40}
+        elif predicted_economy == "recession":
+            target_allocation = {"investment": 30, "saving": 70}
+        else:  # stability
+            target_allocation = {"investment": 40, "saving": 60}
 
-        stock_ratio = stock_investment / total_investment if total_investment > 0 else 0
-        crypto_ratio = crypto_investment / total_investment if total_investment > 0 else 0
+        # risk_preference 반영
+        if risk_preference == "low":  # 수비적
+            target_allocation["investment"] -= 10
+            target_allocation["saving"] += 10
+        elif risk_preference == "high":  # 공격적
+            target_allocation["investment"] += 10
+            target_allocation["saving"] -= 10
+
+        # 현금 비중 조정
+        if current_cash < portfolio.total_investment * 0.1:
+            target_allocation["cash"] = 15  # 현금이 적을 경우 비율 증가
+            target_allocation["investment"] -= 5  # 투자 비중 감소
+        else:
+            target_allocation["cash"] = 5  # 현금이 충분하면 비율 감소
+            target_allocation["investment"] += 5  # 투자 비중 증가
+
+        # 월 수입 비중 조정
+        if monthly_income > 3000000:  # 월 수입이 충분한 경우 적금 증가
+            target_allocation["saving"] += 10
+            target_allocation["investment"] -= 10
+        elif monthly_income < 1000000:  # 월 수입이 적은 경우 예금 증가
+            target_allocation["saving"] -= 10
+            target_allocation["investment"] += 10
+
+        # 투자자산 내부 비율
+        investment_allocation = {
+            "stock": target_allocation["investment"] * (1 - volatility),
+            "crypto": target_allocation["investment"] * volatility,
+        }
+
+        # 예/적금 내부 비율
+        saving_allocation = {
+            "deposit": target_allocation["saving"] * volatility,
+            "saving": target_allocation["saving"] * (1 - volatility),
+        }
+
+        # 현재와 추천 비율 비교 메시지 생성
+        adjustment_message = f"""
+        현재 포트폴리오 비율은 다음과 같습니다:
+        - 주식: {current_allocation.get('stock', 0)}%
+        - 암호화폐: {current_allocation.get('crypto', 0)}%
+        - 예금: {current_allocation.get('deposit', 0)}%
+        - 적금: {current_allocation.get('saving', 0)}%
+        - 현금: {current_allocation.get('cash', 0)}%
+
+        추천 비율:
+        - 주식: {investment_allocation['stock']}%
+        - 암호화폐: {investment_allocation['crypto']}%
+        - 예금: {saving_allocation['deposit']}%
+        - 적금: {saving_allocation['saving']}%
+        - 현금: {target_allocation.get('cash', 10)}%
+
+        변동성({volatility:.2f})과 시장 상황({predicted_economy}), 투자 성향({risk_preference}), 
+        현금({current_cash}), 월 수입({monthly_income})을 고려하여 비율을 조정하는 것을 권장합니다.
+        """
 
         # 저장 상품(예금 및 적금) 가져오기
         deposits = DepositProducts.objects.prefetch_related("options").all()
         savings = SavingProducts.objects.prefetch_related("options").all()
 
-        scored_products = []  # 추천 상품 리스트
+        scored_products = []
 
-        # 사용자 친화적인 메시지 작성
-        portfolio_volatility_message = (
-            f"고객님의 포트폴리오 변동성은 {portfolio.volatility or 'N/A'}입니다. "
-            "변동성이 높을수록 수익률 변동이 크며, 공격적인 투자에 적합합니다. "
-            "아래는 고객님의 투자 성향과 경제 예측에 기반한 추천 상품입니다."
-        )
+        # 예금 및 적금 상품 점수 계산
+        for product_set, product_type, allocation_key in [
+            (deposits, "deposit", "deposit"),
+            (savings, "saving", "saving"),
+        ]:
+            for product in product_set:
+                score = 0
+                reasons = []
 
-        # 예금 스코어 계산
-        for deposit in deposits:
-            score = 0
-            reasons = []
+                if not product.options.exists():
+                    continue
 
-            # 옵션 데이터가 없는 경우 생략
-            if not deposit.options.exists():
-                continue
+                for option in product.options.all():
+                    score += option.intr_rate * 10
+                    reasons.append(f"기본 금리가 {option.intr_rate}%로 높습니다.")
+                    if predicted_economy == "growth" and option.save_trm >= 12:
+                        score += 10
+                        reasons.append("성장 경제에 적합한 장기 상품입니다.")
+                    elif predicted_economy == "recession" and option.save_trm < 12:
+                        score += 5
+                        reasons.append("하락 경제에 적합한 단기 상품입니다.")
 
-            for option in deposit.options.all():
-                score += option.intr_rate * 10
-                reasons.append(f"기본 금리가 {option.intr_rate}%로 높습니다.")
-                if predicted_economy == "growth" and option.save_trm >= 12:
-                    score += 10
-                    reasons.append("성장 경제에 적합한 장기 상품입니다.")
-                elif predicted_economy == "recession" and option.save_trm < 12:
-                    score += 5
-                    reasons.append("하락 경제에 적합한 단기 상품입니다.")
-
-                # 만기 후 혜택 반영
-                if hasattr(option, "mtrt_int") and option.mtrt_int:
-                    score += option.mtrt_int * 2
-                    reasons.append(f"만기 후 이자율 {option.mtrt_int}%로 추가 혜택이 있습니다.")
-
-            if risk_preference == "high" and crypto_ratio > 0.5:
-                score += 10
-                reasons.append("공격적인 투자 성향에 적합합니다.")
-            elif risk_preference == "low" and stock_ratio > 0.6:
-                score -= 10
-                reasons.append("수비적인 투자 성향에 부적합합니다.")
-
-            scored_products.append({
-                "product": deposit,
-                "score": score,
-                "type": "deposit",
-                "reasons": sorted(set(reasons), key=reasons.index)  # 중복 제거
-            })
-
-        # 적금 스코어 계산
-        for saving in savings:
-            score = 0
-            reasons = []
-
-            # 옵션 데이터가 없는 경우 생략
-            if not saving.options.exists():
-                continue
-
-            for option in saving.options.all():
-                score += option.intr_rate * 10
-                reasons.append(f"기본 금리가 {option.intr_rate}%로 높습니다.")
-                if predicted_economy == "growth" and option.save_trm >= 12:
-                    score += 10
-                    reasons.append("성장 경제에 적합한 장기 상품입니다.")
-                elif predicted_economy == "recession" and option.save_trm < 12:
-                    score += 5
-                    reasons.append("하락 경제에 적합한 단기 상품입니다.")
-
-                # 만기 후 혜택 반영
-                if hasattr(option, "mtrt_int") and option.mtrt_int:
-                    score += option.mtrt_int * 2
-                    reasons.append(f"만기 후 이자율 {option.mtrt_int}%로 추가 혜택이 있습니다.")
-
-            if risk_preference == "high" and crypto_ratio > 0.5:
-                score += 10
-                reasons.append("공격적인 투자 성향에 적합합니다.")
-            elif risk_preference == "low" and stock_ratio > 0.6:
-                score -= 10
-                reasons.append("수비적인 투자 성향에 부적합합니다.")
-
-            scored_products.append({
-                "product": saving,
-                "score": score,
-                "type": "saving",
-                "reasons": sorted(set(reasons), key=reasons.index)  # 중복 제거
-            })
+                scored_products.append({
+                    "product": product,
+                    "type": product_type,
+                    "score": score,
+                    "reasons": reasons,
+                    "recommended_amount": portfolio.total_investment * (saving_allocation[allocation_key] / 100),
+                })
 
         # 스코어 기준 정렬
         scored_products.sort(key=lambda x: x["score"], reverse=True)
 
-        # 추천 상품 저장 및 로그 생성
-        for product in scored_products[:5]:  # 상위 5개만 추천
-            content_type = ContentType.objects.get_for_model(product["product"].__class__)
+        # 추천 상품 생성
+        recommendations = []
+        for product_data in scored_products[:5]:  # 상위 5개 상품만 포함
+            recommendations.append({
+                "product_name": product_data["product"].fin_prdt_nm,
+                "product_type": product_data["type"],
+                "recommended_amount": product_data["recommended_amount"],
+                "reason": " | ".join(product_data["reasons"]),
+            })
 
-            # 가장 높은 점수의 이유를 강조하여 표시
-            main_reason = product["reasons"][0] if product["reasons"] else "추천 이유가 없습니다."
-
-            # 추천 로그 중복 확인
-            existing_log = RecommendationLog.objects.filter(
-                portfolio=portfolio,
-                content_type=content_type,
-                object_id=product["product"].id
-            ).first()
-
-            recommendation_message = (
-                f"{portfolio_volatility_message}\n\n"
-                f"주요 이유: {main_reason}\n"
-                f"추가 이유:\n" + "\n".join(product["reasons"])
-            )
-
-            if existing_log:
-                # 이미 존재하는 경우, 추천 이유 업데이트
-                existing_log.reason = recommendation_message
-                existing_log.save()
-            else:
-                # 새로운 추천 로그 생성
-                RecommendationLog.objects.create(
-                    portfolio=portfolio,
-                    content_type=content_type,
-                    object_id=product["product"].id,
-                    reason=recommendation_message,
-                )
-
-        return PortfolioSerializer(portfolio).data
+        return {
+            "portfolio": PortfolioSerializer(portfolio).data,
+            "adjustment_message": adjustment_message.strip(),
+            "recommendations": recommendations,
+        }
     except Exception as e:
         return {"error": str(e)}
+
+
 
 
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recommend_products(request, portfolio_id):
+    """
+    포트폴리오를 기반으로 비율 조정 및 상품 추천 데이터를 반환합니다.
+    """
     # 포트폴리오 가져오기
     portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
-    
+
     # 추천 로직 실행
-    data = recommend_products_logic(portfolio)
-    
-    # 포트폴리오와 추천 로그 데이터를 분리하여 반환
+    recommendation_data = recommend_products_logic(portfolio)
+
+    # 추천 로직에서 에러가 반환된 경우 처리
+    if "error" in recommendation_data:
+        return Response({"error": recommendation_data["error"]}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 응답 데이터 구성
     response_data = {
-        "portfolio": PortfolioSerializer(portfolio).data,  # 포트폴리오 데이터
-        "recommendations": RecommendationLogSerializer(
-            portfolio.recommendation_logs.all(), many=True
-        ).data  # 추천 로그 데이터
+        "portfolio": recommendation_data.get("portfolio"),  # 포트폴리오 데이터
+        "adjustment_message": recommendation_data.get("adjustment_message"),  # 비율 조정 메시지
+        "recommendations": recommendation_data.get("recommendations"),  # 추천 상품 리스트
     }
-    
-    return Response(response_data)
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
-# 포트폴리오 생성 및 목록 조회
+
+# --- Portfolio Views ---
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def portfolio_list_create(request):
@@ -192,7 +196,6 @@ def portfolio_list_create(request):
             return Response(PortfolioSerializer(portfolio).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# 포트폴리오 상세 조회, 수정, 삭제
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def portfolio_detail(request, portfolio_id):
@@ -213,10 +216,7 @@ def portfolio_detail(request, portfolio_id):
         portfolio.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-from datetime import datetime
-import pandas as pd
-# 주식 추가
+# --- Stock Views ---
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_stock(request, portfolio_id):
@@ -239,11 +239,9 @@ def add_stock(request, portfolio_id):
             if not ticker or not purchase_price or not total_investment:
                 raise ValueError("Missing required stock data: ticker, purchase_price, or total_investment.")
 
-            # 현재 날짜 및 6개월 전 계산
+            # FinanceDataReader에서 데이터 가져오기
             purchase_date = datetime.now().strftime("%Y-%m-%d")
             start_date = (pd.to_datetime(purchase_date) - pd.DateOffset(months=6)).strftime("%Y-%m-%d")
-
-            # FinanceDataReader에서 데이터 가져오기
             stock_info = fdr.DataReader(ticker, start_date, purchase_date)
 
             if stock_info.empty:
@@ -270,19 +268,35 @@ def add_stock(request, portfolio_id):
             added_stocks.append(StockSerializer(stock).data)
 
         except ValueError as ve:
-            # 데이터 입력 오류 처리
             errors.append({"error": str(ve), "stock_data": stock_data})
         except Exception as e:
-            # 일반적인 예외 처리
-            errors.append({"error": "An unexpected error occurred: " + str(e), "stock_data": stock_data})
+            errors.append({"error": f"An unexpected error occurred: {str(e)}", "stock_data": stock_data})
 
     if errors:
         return Response({"added_stocks": added_stocks, "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
-
     return Response({"added_stocks": added_stocks}, status=status.HTTP_201_CREATED)
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_stock(request, portfolio_id, stock_id):
+    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
+    stock = get_object_or_404(Stock, id=stock_id, portfolio=portfolio)
 
-# 암호화폐 추가
+    serializer = StockSerializer(stock, data=request.data, partial=True)
+    if serializer.is_valid():
+        stock = serializer.save()
+        return Response(StockSerializer(stock).data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_stock(request, portfolio_id, stock_id):
+    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
+    stock = get_object_or_404(Stock, id=stock_id, portfolio=portfolio)
+    stock.delete()
+    return Response({"message": "Stock deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+# --- Crypto Views ---
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_crypto(request, portfolio_id):
@@ -298,7 +312,6 @@ def add_crypto(request, portfolio_id):
     for crypto_data in cryptos_data:
         try:
             # 필수 데이터 확인
-            print(crypto_data)
             symbol = crypto_data.get("symbol")
             purchase_price = crypto_data.get("purchase_price")
             total_investment = crypto_data.get("total_investment")
@@ -306,17 +319,13 @@ def add_crypto(request, portfolio_id):
             if not symbol or not purchase_price or not total_investment:
                 raise ValueError("Missing required cryptocurrency data: symbol, purchase_price, or total_investment.")
 
-            # 구매일 및 6개월 전 데이터 설정
+            # FinanceDataReader에서 데이터 가져오기
             purchase_date = datetime.now().strftime("%Y-%m-%d")
             start_date = (pd.to_datetime(purchase_date) - pd.DateOffset(months=6)).strftime("%Y-%m-%d")
+            crypto_info = fdr.DataReader(f"{symbol}/KRW", start_date, purchase_date)
 
-            # FinanceDataReader에서 데이터 가져오기
-            try:
-                crypto_info = fdr.DataReader(f"{symbol}/KRW", start_date, purchase_date)
-                if crypto_info.empty:
-                    raise ValueError(f"Symbol '{symbol}' not found or no data available.")
-            except Exception:
-                raise ValueError(f"Failed to retrieve data for symbol '{symbol}'. Please check the symbol.")
+            if crypto_info.empty:
+                raise ValueError(f"Symbol '{symbol}' not found or no data available.")
 
             # 현재 가격 및 변동성 계산
             current_price = crypto_info.iloc[-1]["Close"]
@@ -340,50 +349,14 @@ def add_crypto(request, portfolio_id):
             added_cryptos.append(CryptoSerializer(crypto).data)
 
         except ValueError as ve:
-            # 데이터 입력 오류 처리
             errors.append({"error": str(ve), "crypto_data": crypto_data})
         except Exception as e:
-            # 일반적인 예외 처리
-            errors.append({"error": "An unexpected error occurred: " + str(e), "crypto_data": crypto_data})
+            errors.append({"error": f"An unexpected error occurred: {str(e)}", "crypto_data": crypto_data})
 
     if errors:
         return Response({"added_cryptos": added_cryptos, "errors": errors}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"added_cryptos": added_cryptos}, status=status.HTTP_201_CREATED)
 
-
-# 주식 삭제
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_stock(request, portfolio_id, stock_id):
-    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
-    stock = get_object_or_404(Stock, id=stock_id, portfolio=portfolio)
-
-    stock.delete()
-    return Response({"message": "Stock deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
-
-# 암호화폐 삭제
-@api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_crypto(request, portfolio_id, crypto_id):
-    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
-    crypto = get_object_or_404(Crypto, id=crypto_id, portfolio=portfolio)
-
-    crypto.delete()
-    return Response({"message": "Cryptocurrency deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
-
-# 주식 수정
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-def update_stock(request, portfolio_id, stock_id):
-    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
-    stock = get_object_or_404(Stock, id=stock_id, portfolio=portfolio)
-    serializer = StockSerializer(stock, data=request.data, partial=True)
-    if serializer.is_valid():
-        stock = serializer.save()
-        return Response(StockSerializer(stock).data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# 암호화폐 수정
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def update_crypto(request, portfolio_id, crypto_id):
@@ -395,3 +368,12 @@ def update_crypto(request, portfolio_id, crypto_id):
         crypto = serializer.save()
         return Response(CryptoSerializer(crypto).data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_crypto(request, portfolio_id, crypto_id):
+    portfolio = get_object_or_404(Portfolio, id=portfolio_id, user=request.user)
+    crypto = get_object_or_404(Crypto, id=crypto_id, portfolio=portfolio)
+    crypto.delete()
+    return Response({"message": "Cryptocurrency deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
