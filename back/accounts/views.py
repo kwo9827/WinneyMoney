@@ -16,15 +16,6 @@ from rest_framework import status
 
 User = get_user_model()
 
-# 회원가입
-@api_view(['POST'])
-def register_user(request):
-    serializer = UserCreateSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.save()  # 새로운 사용자 생성
-        return Response({'message': '회원가입이 성공적으로 완료되었습니다.', 'username': user.username}, status=status.HTTP_201_CREATED)
-    return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
 # 회원 상세 정보
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
