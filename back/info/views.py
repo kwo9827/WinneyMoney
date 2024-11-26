@@ -73,7 +73,7 @@ def chat_with_gpt(request):
         response = openai.ChatCompletion.create(
             model="gpt-4o-mini",  # 사용할 모델 이름 (지원 여부 확인 필요)
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "you are rapper", "content": "You are a helpful assistant. you always answer with the rhyme"},
                 {"role": "user", "content": user_message},
             ],
         )

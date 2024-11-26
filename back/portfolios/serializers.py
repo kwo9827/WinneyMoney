@@ -12,20 +12,23 @@ from finlife.models import DepositProducts, SavingProducts
 
 # 추천 로그 Serializer
 class RecommendationLogSerializer(serializers.ModelSerializer):
-    product_id = serializers.SerializerMethodField()  # 상품 ID 필드 추가
+    product_id = serializers.IntegerField(source='object_id')  # object_id를 product_id로 매핑
     product_name = serializers.SerializerMethodField()
     product_type = serializers.SerializerMethodField()
+    recommended_allocation = serializers.JSONField()
+    recommended_amount = serializers.DecimalField(max_digits=15, decimal_places=2)
 
     class Meta:
         model = RecommendationLog
         fields = [
+            'product_id',  # 추가된 필드
             'product_name',
             'product_type',
             'reason',
             'recommended_allocation',
             'recommended_amount',
-            'recommended_volatility',  # 추천 후 변동성 추가
-            'created_at',
+            'recommended_volatility',  # 변동성 필드 포함
+            'created_at'
         ]
 
     def get_product_type(self, obj):
@@ -43,6 +46,7 @@ class RecommendationLogSerializer(serializers.ModelSerializer):
         추천 상품 이름 반환.
         """
         return obj.product.fin_prdt_nm if obj.product else "Unknown"
+
 
 
 # 예금 Serializer
