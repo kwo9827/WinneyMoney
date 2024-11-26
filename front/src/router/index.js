@@ -6,7 +6,7 @@ import HomeView from '@/views/HomeView.vue'
 // account 기능
 import ChangePasswordView from '@/views/accounts/ChangePasswordView.vue'
 import FindPasswordView from '@/views/accounts/FindPasswordView.vue'
-import LogInView from '@/views/accounts/LogInView.vue'
+import LogInView from '@/views/accounts/LoginView.vue'
 import ProfileView from '@/views/accounts/ProfileView.vue'
 import SignUpView from '@/views/accounts/SignUpView.vue'
 import EditProfileView from '@/views/accounts/EditProfileView.vue'

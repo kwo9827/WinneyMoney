@@ -79,26 +79,61 @@ def news(request):
         'current_page': current_page_data.number,
     }, safe=False)
 
+# 챗봇 기능
 @api_view(['POST'])
 def chat_with_gpt(request):
-    user_message = request.data.get('message')  # 사용자 입력 메시지
+    user_message = request.data.get('message', '').strip()
     if not user_message:
         return Response({'error': '메시지를 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    openai.api_key = settings.OPENAI_API_KEY  # OpenAI API 키 설정
+    openai.api_key = settings.OPENAI_API_KEY
 
     try:
-        # gpt-4o-mini 모델 호출
+        # OpenAI API 호출
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",  # 사용할 모델 이름 (지원 여부 확인 필요)
+            model="gpt-4o-mini",  # 모델 이름 확인
             messages=[
-                {"role": "system", "content": "You are the famous rapper. You are a helpful assistant. you always answer with the rhyme"},
-                {"role": "assistant", "content": "Yo11 디제이 비트 주세요~"},
+                {"role": "system", "content": "You are the famous rapper. You are a helpful assistant. You always answer with the rhyme."},
                 {"role": "user", "content": user_message},
             ],
         )
         reply = response['choices'][0]['message']['content']
         return Response({'reply': reply}, status=status.HTTP_200_OK)
-    except Exception as e:
-        print(f"오류 발생: {e}")
-        return Response({'error': f'OpenAI API 호출 오류: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:  # 모든 예외를 처리
+        print(f"OpenAI API 호출 오류: {e}")
+        return Response({'error': f'OpenAI API 호출 오류: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+# # 키 확인하기
+# def call_openai_api(user_message):
+#     """
+#     OpenAI API 호출 함수
+#     """
+#     openai.api_key = settings.OPENAI_API_KEY
+
+#     try:
+#         response = openai.ChatCompletion.create(
+#             model="gpt-4",  # 모델 이름을 최신 버전에 맞게 수정
+#             messages=[
+#                 {"role": "system", "content": "You are the famous rapper. You are a helpful assistant. You always answer with the rhyme."},
+#                 {"role": "user", "content": user_message},
+#             ],
+#         )
+#         return response['choices'][0]['message']['content']
+#     except Exception as e:
+#         raise RuntimeError(f"OpenAI API 호출 오류: {e}")
+
+# @api_view(['POST'])
+# def chat_with_gpt(request):
+#     user_message = request.data.get('message', '').strip()
+#     if not user_message:
+#         return Response({'error': '메시지를 입력해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
+
+#     try:
+#         reply = call_openai_api(user_message)
+#         return Response({'reply': reply}, status=status.HTTP_200_OK)
+#     except RuntimeError as e:
+#         print(str(e))
+#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

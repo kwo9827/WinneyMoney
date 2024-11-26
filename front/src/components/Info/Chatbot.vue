@@ -1,20 +1,32 @@
 <template>
-  <div class="chatbot">
-    <div class="chat-window">
-      <div class="messages">
-        <div v-for="(msg, index) in chatHistory" :key="index" :class="msg.role">
-          <span>{{ msg.content }}</span>
+  <div class="chatbot-container">
+    <!-- 토글 버튼 -->
+    <button @click="toggleChatbot" class="toggle-button">
+      {{ isChatVisible ? "닫기" : "열기" }} 챗봇
+    </button>
+
+    <!-- 채팅창 -->
+    <div v-if="isChatVisible" class="chatbot">
+      <div class="chat-window">
+        <div class="messages">
+          <div
+            v-for="(msg, index) in chatHistory"
+            :key="index"
+            :class="msg.role"
+          >
+            <span>{{ msg.content }}</span>
+          </div>
         </div>
+        <form @submit.prevent="sendMessage" class="input-form">
+          <input
+            v-model="userMessage"
+            type="text"
+            placeholder="메시지를 입력하세요..."
+            required
+          />
+          <button type="submit">전송</button>
+        </form>
       </div>
-      <form @submit.prevent="sendMessage" class="input-form">
-        <input
-          v-model="userMessage"
-          type="text"
-          placeholder="메시지를 입력하세요..."
-          required
-        />
-        <button type="submit">전송</button>
-      </form>
     </div>
   </div>
 </template>
@@ -25,11 +37,16 @@ import axios from "axios";
 export default {
   data() {
     return {
+      isChatVisible: false, // 채팅창 표시 여부
       userMessage: "",
       chatHistory: [],
     };
   },
   methods: {
+    toggleChatbot() {
+      // 채팅창 보이기/숨기기
+      this.isChatVisible = !this.isChatVisible;
+    },
     async sendMessage() {
       if (!this.userMessage.trim()) return;
 
@@ -63,10 +80,27 @@ export default {
 </script>
 
 <style scoped>
-.chatbot {
+/* 컨테이너 스타일 */
+.chatbot-container {
   position: fixed;
   bottom: 20px;
-  right: 20px;
+  left: 20px;
+}
+
+/* 토글 버튼 스타일 */
+.toggle-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+}
+
+/* 챗봇 스타일 */
+.chatbot {
   width: 300px;
   border: 1px solid #ccc;
   border-radius: 10px;
