@@ -53,6 +53,63 @@
 
 ---
 
+## API 명세서
+
+| **App**       | **Endpoint**                                     | **Method** | **Description**                                                     | **Authentication** |
+|---------------|--------------------------------------------------|------------|---------------------------------------------------------------------|---------------------|
+| **Accounts**  | `/accounts/auth/login/`                         | `POST`     | 사용자 로그인                                                       | ❌                  |
+|               | `/accounts/auth/logout/`                        | `POST`     | 사용자 로그아웃                                                     | ✅                  |
+|               | `/accounts/auth/password/change/`               | `POST`     | 비밀번호 변경                                                       | ✅                  |
+|               | `/accounts/auth/password/reset/`                | `POST`     | 비밀번호 초기화 요청                                                | ❌                  |
+|               | `/accounts/auth/password/reset/confirm/`        | `POST`     | 비밀번호 초기화 확인                                                | ❌                  |
+|               | `/accounts/auth/user/`                          | `GET`      | 현재 로그인한 사용자 정보 조회                                      | ✅                  |
+|               | `/accounts/change-password/`                    | `PUT`      | 비밀번호 변경                                                       | ✅                  |
+|               | `/accounts/delete/`                             | `DELETE`   | 사용자 계정 삭제                                                    | ✅                  |
+|               | `/accounts/detail/{username}/`                  | `GET`      | 특정 사용자의 상세 정보 조회                                        | ✅                  |
+|               | `/accounts/edit/`                               | `PUT`      | 사용자 정보 수정                                                    | ✅                  |
+|               | `/accounts/follow/{username}/`                  | `POST`     | 특정 사용자를 팔로우                                                | ✅                  |
+|               | `/accounts/signup/`                             | `POST`     | 새로운 사용자 등록                                                  | ❌                  |
+|               | `/accounts/signup/resend-email/`                | `POST`     | 인증 이메일 재발송                                                  | ❌                  |
+|               | `/accounts/signup/verify-email/`                | `POST`     | 이메일 인증                                                         | ❌                  |
+| **Articles**  | `/articles/`                                    | `GET`      | 게시글 목록 조회                                                    | ✅                  |
+|               | `/articles/`                                    | `POST`     | 새 게시글 작성                                                      | ✅                  |
+|               | `/articles/{article_pk}/`                       | `GET`      | 특정 게시글 조회                                                    | ✅                  |
+|               | `/articles/{article_pk}/`                       | `PUT`      | 특정 게시글 수정                                                    | ✅                  |
+|               | `/articles/{article_pk}/`                       | `DELETE`   | 특정 게시글 삭제                                                    | ✅                  |
+|               | `/articles/{article_pk}/like/`                  | `POST`     | 특정 게시글 좋아요                                                  | ✅                  |
+|               | `/articles/comment/{article_pk}/{parent_pk}/`   | `POST`     | 특정 게시글에 댓글 추가                                             | ✅                  |
+|               | `/articles/comment/{comment_pk}/update/`        | `PUT`      | 특정 댓글 수정                                                      | ✅                  |
+|               | `/articles/comment/{article_pk}/{comment_pk}/delete/` | `DELETE` | 특정 댓글 삭제                                                      | ✅                  |
+| **Finlife**   | `/finlife/deposit-products/`                    | `GET`      | 예금 상품 목록 조회                                                 | ✅                  |
+|               | `/finlife/deposit-products/`                    | `POST`     | 예금 상품 등록                                                      | ✅                  |
+|               | `/finlife/deposit-products/detail/{product_id}/`| `GET`      | 특정 예금 상품 조회                                                 | ✅                  |
+|               | `/finlife/favorites/`                           | `GET`      | 즐겨찾기한 금융 상품 목록 조회                                     | ✅                  |
+|               | `/finlife/favorites/deposit/{fin_prdt_cd}/`     | `POST`     | 특정 예금 상품 즐겨찾기 추가                                        | ✅                  |
+|               | `/finlife/favorites/saving/{fin_prdt_cd}/`      | `POST`     | 특정 적금 상품 즐겨찾기 추가                                        | ✅                  |
+|               | `/finlife/saving-products/`                     | `GET`      | 적금 상품 목록 조회                                                 | ✅                  |
+|               | `/finlife/saving-products/`                     | `POST`     | 적금 상품 등록                                                      | ✅                  |
+|               | `/finlife/saving-products/detail/{product_id}/` | `GET`      | 특정 적금 상품 조회                                                 | ✅                  |
+| **Portfolios**| `/portfolios/`                                  | `GET`      | 포트폴리오 목록 조회                                                | ✅                  |
+|               | `/portfolios/`                                  | `POST`     | 새 포트폴리오 생성                                                  | ✅                  |
+|               | `/portfolios/{portfolio_id}/`                   | `GET`      | 특정 포트폴리오 조회                                                | ✅                  |
+|               | `/portfolios/{portfolio_id}/`                   | `PUT`      | 특정 포트폴리오 수정                                                | ✅                  |
+|               | `/portfolios/{portfolio_id}/`                   | `DELETE`   | 특정 포트폴리오 삭제                                                | ✅                  |
+|               | `/portfolios/{portfolio_id}/recommend/`         | `GET`      | 포트폴리오 기반 추천 데이터 반환                                    | ✅                  |
+|               | `/portfolios/{portfolio_id}/stocks/`            | `POST`     | 포트폴리오에 주식 추가                                              | ✅                  |
+|               | `/portfolios/{portfolio_id}/stocks/{stock_id}/` | `PUT`      | 특정 주식 수정                                                      | ✅                  |
+|               | `/portfolios/{portfolio_id}/stocks/{stock_id}/delete/` | `DELETE` | 특정 주식 삭제                                                      | ✅                  |
+|               | `/portfolios/{portfolio_id}/crypto/`            | `POST`     | 포트폴리오에 암호화폐 추가                                          | ✅                  |
+|               | `/portfolios/{portfolio_id}/crypto/{crypto_id}/`| `PUT`      | 특정 암호화폐 수정                                                  | ✅                  |
+|               | `/portfolios/{portfolio_id}/crypto/{crypto_id}/delete/` | `DELETE` | 특정 암호화폐 삭제                                                  | ✅                  |
+
+--
+
+## ERD
+
+<img src="ERD.png" alt='erd' >
+
+--
+
 ## 🚀 설치 및 실행 방법
 
 ### 1. 프로젝트 클론
