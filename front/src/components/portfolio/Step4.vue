@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-card class="pa-4">
+    <v-card class="pa-4" width="100%">
       <v-card-title>
         <h2>경제 전망 선택</h2>
       </v-card-title>

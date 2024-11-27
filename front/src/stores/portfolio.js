@@ -7,12 +7,11 @@ export const usePortfolioStore = defineStore("portfolio", () => {
   // Portfolio 상태를 reactive로 관리
   const portfolios = reactive([]); // 모든 사용자 포트폴리오
   const portfolio = reactive({
-    name: "",
-    current_cash: 0,
-    monthly_income: 0,
+    name: "내꺼",
+    current_cash: 100,
+    monthly_income: 1000,
     predicted_economy: null,
     risk_preference: null,
-    total_investment: 0,
     stocks: [],
     cryptocurrencies: [],
   });
@@ -82,6 +81,7 @@ export const usePortfolioStore = defineStore("portfolio", () => {
       );
 
       portfolio.stocks.push(response.data);
+      console.log(portfolio.stocks)
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data || error.message);

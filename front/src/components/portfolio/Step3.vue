@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-card class="pa-4">
+    <v-card class="pa-4" width="100%">
       <v-card-title>
         <h2>정기적 월 소득 입력</h2>
       </v-card-title>
@@ -11,19 +11,22 @@
           outlined
           dense
           placeholder="예: 3000000 (숫자만 입력)"
-          clearable
           type="number"
           :error-messages="error"
           @input="validateInput"
         />
       </v-card-text>
       <v-card-actions>
-        <v-btn color="primary" :disabled="!isInputValid" @click="nextStep">
-          다음
-        </v-btn>
-        <v-btn color="secondary" outlined @click="emit('prev')">
-          이전
-        </v-btn>
+        <v-col cols="6">
+            <v-btn color="secondary" outlined @click="emit('prev')">
+              이전
+            </v-btn>
+          </v-col>
+          <v-col cols="6">
+            <v-btn color="primary" :disabled="!isInputValid" @click="nextStep">
+              다음
+            </v-btn>
+          </v-col>
       </v-card-actions>
     </v-card>
   </v-container>

@@ -34,8 +34,8 @@
             </ul>
           </template>
           <template v-else>
-            <RouterLink :to="{ name: 'LogInView' }" class="nav-item">로그인</RouterLink>
-            <RouterLink :to="{ name: 'SignUpView' }" class="nav-item">회원가입</RouterLink>
+            <RouterLink :to="{ name: 'LogInView' }" class="nav-item auth-item">로그인</RouterLink>
+            <RouterLink :to="{ name: 'SignUpView' }" class="nav-item auth-item">회원가입</RouterLink>
           </template>
         </div>
       </div>
@@ -185,9 +185,7 @@ const confirmDeleteAccount = () => {
 }
 
 /* 메인 컨텐츠 */
-main {
-  padding: 1rem;
-}
+
 
 /* 챗봇 컨테이너 */
 .chatbot {
@@ -291,4 +289,18 @@ main {
   background: transparent; /* 트랙은 투명 */
 }
 
+/* 사용자 메뉴 */
+.user-menu {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.auth-item {
+  margin-right: 10px; /* 로그인과 회원가입 버튼 사이의 여백 */
+}
+
+.auth-item:last-child {
+  margin-right: 0; /* 마지막 버튼의 여백 제거 */
+}
 </style>

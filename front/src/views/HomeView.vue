@@ -8,7 +8,10 @@
         WinneyMoney와 함께 지금 당장 시작하세요.
       </p>
       <div class="cta-buttons">
-        <button class="btn btn-success">자신에게 맞는 금융 상품 알아보기</button>
+        <router-link to="/portfolio/create" class="btn btn-success">
+          자신에게 맞는 금융 상품 알아보기
+        </router-link>
+
         <RouterLink :to="{ name: 'FinanceView' }" class="btn btn-outline">
           예금, 적금 상품 담으러가기
         </RouterLink>

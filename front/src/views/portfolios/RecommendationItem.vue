@@ -7,6 +7,7 @@
     <v-card-text>
       <p>추천 이유:</p>
       <ul class="reason-list">
+        <li>{{ parsedReasons }}</li>
         <li v-for="(reason, index) in parsedReasons" :key="index">
           {{ reason }}
         </li>

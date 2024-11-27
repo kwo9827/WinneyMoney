@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-card class="pa-4">
+    <v-card class="pa-4" width="100%">
       <v-card-title>
         <h2>포트폴리오 이름 설정</h2>
       </v-card-title>
@@ -11,7 +11,6 @@
           outlined
           dense
           placeholder="예: '내 첫 투자'"
-          clearable
           @input="validateInput"
         />
         <v-alert v-if="error" type="error" class="mt-2">

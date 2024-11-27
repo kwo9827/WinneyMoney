@@ -302,7 +302,7 @@ def add_stock(request, portfolio_id):
                 raise ValueError(f"Ticker '{ticker}' not found or no data available.")
 
             # 현재 가격 및 변동성 계산
-            current_price = stock_info.iloc[-1]["Close"]*1400
+            current_price = stock_info.iloc[-1]["Close"]
             weekly_returns = stock_info["Close"].pct_change().dropna()
             volatility = weekly_returns.std() * (126**0.5)  # 연간화된 변동성
 

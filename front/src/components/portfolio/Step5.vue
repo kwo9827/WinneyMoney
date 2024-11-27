@@ -1,6 +1,6 @@
 <template>
   <v-container class="step-container">
-    <v-card class="card" elevation="2">
+    <v-card class="card" width="100%" elevation="2">
       <v-card-title>
         <h2>위험 성향 선택</h2>
       </v-card-title>
@@ -33,18 +33,15 @@
         <!-- 다음 버튼 -->
         <v-col cols="6">
           <v-btn
-            :disabled="!portfolio.risk_preference"
-            @click="nextStep"
-            color="primary"
+            :disabled="! portfolio.risk_preference "
+            @click="submitPortfolio"
+            :color="! portfolio.risk_preference ? 'grey' : 'primary'"
             block
           >
-            다음
+            {{ ! portfolio.risk_preference ? '생성 중...' : '포트폴리오 생성' }}
           </v-btn>
         </v-col>
       </v-card-actions>
-
-
-
     </v-card>
   </v-container>
 </template>
@@ -55,15 +52,16 @@ import { usePortfolioStore } from "@/stores/portfolio";
 import { defineEmits } from "vue";
 
 const emit = defineEmits(["next"]);
+const portfolioStore = usePortfolioStore()
 const portfolio = usePortfolioStore().portfolio;
 const error = ref("");
 
 // 위험 성향 옵션
 const riskOptions = [
   {
-    label: "수비적",
-    value: "low",
-    description: "낮은 위험, 안정적 수익",
+    label: "공격형",
+    value: "high",
+    description: "높은 위험, 높은 수익 가능성",
   },
   {
     label: "보통",
@@ -71,9 +69,9 @@ const riskOptions = [
     description: "중간 위험, 균형 잡힌 수익",
   },
   {
-    label: "공격형",
-    value: "high",
-    description: "높은 위험, 높은 수익 가능성",
+    label: "수비적",
+    value: "low",
+    description: "낮은 위험, 안정적 수익",
   },
 ];
 
@@ -83,14 +81,17 @@ const selectOption = (value) => {
   error.value = "";
 };
 
-// 다음 단계로 이동
-const nextStep = () => {
-  if (!portfolio.risk_preference) {
-    error.value = "위험 성향을 선택해주세요.";
-  } else {
-    error.value = "";
+// 포트폴리오 생성 및 다음 단계로 이동
+const submitPortfolio = async () => {
+  try {
+    const response = await portfolioStore.createPortfolio();
+    console.log("포트폴리오 생성 성공:", response);
+    alert("포트폴리오가 성공적으로 생성되었습니다!");
     emit("next");
-  }
+  } catch (error) {
+    console.error("포트폴리오 생성 실패:", error.message || error);
+    alert("포트폴리오 생성에 실패했습니다. 다시 시도해주세요.");
+  } 
 };
 </script>
 

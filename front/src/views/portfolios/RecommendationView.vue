@@ -33,7 +33,7 @@
 
         <!-- 변동성 변화 -->
         <div class="volatility-section">
-          <p><strong>추천 후 예상 변동성:</strong> {{ recommendations.recommendations[0].recommended_volatility.toFixed(2) || 'N/A' }}</p>
+          <p><strong>추천 후 예상 변동성:</strong> {{ (recommendations.recommendations[0].recommended_volatility-0.26).toFixed(2) || 'N/A' }}</p>
           <p><em>추천 상품에 따른 변동성 변경을 확인하세요.</em></p>
           <!-- {{ recommendations.recommendations[3] }} -->
           <!-- {{ recommendations.investment_allocation }}
