@@ -31,14 +31,35 @@
 
 ## 📌 주요 기능
 
+![image](https://github.com/user-attachments/assets/dce064c8-b795-494b-8107-2ff8fc656bb9)
+
+![image](https://github.com/user-attachments/assets/a02f715f-c14a-4f5e-9865-4df60026e682)
+
+
 - 금융 상품 추천 알고리즘을 활용하여 맞춤형 금융 상품 추천
 - 예금 및 적금 금리 비교 기능 제공
 - 사용자 회원가입/로그인/로그아웃/회원탈퇴 기능
 - 커뮤니티 게시판을 통한 사용자 간 정보 공유
+
+![image](https://github.com/user-attachments/assets/8df128d7-c409-4b4c-a57a-b9055a7dd453)
+
+
 - **Vue.js**와 **Django** 기반의 프론트엔드 및 백엔드 분리 구조
 - **카카오 지도 API**를 활용한 은행 위치 정보 제공
+
+![image](https://github.com/user-attachments/assets/bdb627be-c10d-4aad-be3e-617a238ce80c)
+
+
 - **한국수출입 은행 API**를 활용한 실시간 환율 계산기 제공
+
+![image](https://github.com/user-attachments/assets/d3de20da-ea4d-4977-96af-347c56c5b3ac)
+
+
 - **네이버 검색 API**를 활용한 최신 네이버 뉴스 제공
+
+![image](https://github.com/user-attachments/assets/63bfbc0b-cb0c-40e4-8fa6-175473d8bd14)
+
+
 - **Chat GPT API**를 활용한 챗봇 기능 제공
 - **Finance Data Reader API**를 활용하여 포트폴리오 자산 정보 업데이트 
 
