@@ -60,7 +60,8 @@
 
 ---
 
-![image](https://github.com/user-attachments/assets/d3de20da-ea4d-4977-96af-347c56c5b3ac)
+<img src="https://github.com/user-attachments/assets/d3de20da-ea4d-4977-96af-347c56c5b3ac" width="500" height="auto">
+
 
 ---
 
