@@ -67,6 +67,9 @@
 
 ![image](https://github.com/user-attachments/assets/63bfbc0b-cb0c-40e4-8fa6-175473d8bd14)
 
+<img src="https://github.com/user-attachments/assets/63bfbc0b-cb0c-40e4-8fa6-175473d8bd14" width="500" height="auto">
+https://github.com/user-attachments/assets/63bfbc0b-cb0c-40e4-8fa6-175473d8bd14
+
 ---
 
 ## 🛠️ 기술 스택
