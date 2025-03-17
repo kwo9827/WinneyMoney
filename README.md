@@ -44,7 +44,7 @@
 
 ---
 
-<img src="https://github.com/user-attachments/assets/dce064c8-b795-494b-8107-2ff8fc656bb9" width="500" height="auto">
+<img src="https://github.com/user-attachments/assets/dce064c8-b795-494b-8107-2ff8fc656bb9" width="700" height="auto">
 
 ---
 
